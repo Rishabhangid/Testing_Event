@@ -68,11 +68,10 @@ const addMedia = async (req, res, next) => {
 
     // Extract gallery files from req.files array
     const gallery = req.files.gallery.filter(file => file.fieldname.startsWith('gallery'));
-    const banners = req.files.gallery.filter(file => file.fieldname.startsWith('banners'));
-    const video_links = req.body.video_links //coming in arrey
-
+    const banners = req.files.banner.filter(file => file.fieldname.startsWith('banner'));
+    const video_link = req.body.video_link //coming in arrey
     // Call the service to handle the addition of media
-    const result = await eventService.addMedia({ eventId, thumbnail, gallery, banners, video_links });
+    const result = await eventService.addMedia({ eventId, thumbnail, gallery, banners, video_link });
 
     // Respond with the result
     res.status(201).json(result);
@@ -85,13 +84,14 @@ const addMedia = async (req, res, next) => {
 
 const addSpeaker = catchAsync(async (req, res) => {
   const { eventId } = req.params;
-  const propertyRulesInfo = req.body;
-  const paymentMethods = req.body.paymentMethods;
+  const speakerData = req.body;
+  const profile_picture = req.files.profile_picture; 
   try {
-    const { hotel, statusCode } = await eventService.addSpeaker(eventId, propertyRulesInfo, paymentMethods);
+    const { data, statusCode } = await eventService.addSpeaker(eventId, speakerData, profile_picture);
+    console.log(data,statusCode, "---------------data---------------");
     res.status(statusCode).json({
       success: true,
-      hotel: hotel,
+      data,
       message: `Property Rules Info ${statusCode === 200 ? 'Saved' : 'Already Up to Date'} Successfully!`,
     });
   } catch (error) {

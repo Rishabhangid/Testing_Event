@@ -5,6 +5,7 @@ const multer = require("multer");
 const { Authentication, Authorization } = require("../../middlewares");
 const path = require("path");
 const upload = require("../../middlewares/multer");
+
 //Save
 const uploadMiddleware = multer({
   storage: multer.diskStorage({
@@ -33,6 +34,7 @@ const uploadMiddleware = multer({
   { name: "thumbnail", maxCount: 1 },
   { name: "gallery", maxCount: 10 },
   { name: "banner", maxCount: 10 },
+  { name: "profile_picture", maxCount: 1 },
 ]);
 
 // const uploadMiddleware = upload.fields([
@@ -43,6 +45,7 @@ const uploadMiddleware = multer({
 
 //View
 router.get("/event-list", Authentication, Authorization, eventController.getEvents);
+
 router.get(
   "/event-list/:id",
   Authentication,
@@ -77,22 +80,21 @@ router.patch(
   Authorization,
   eventController.addPackageInfo
 );
+
 router.patch(
   "/media/create-event/:eventId",
   Authentication,
   Authorization,
   uploadMiddleware,
-  (req, res, next) => {
-    console.log("Files:", req.files);
-    console.log("Body:", req.body);
-    next();
-  },
+ 
   eventController.addMedia
 );
+
 router.patch(
   "/speakerlist/create-event/:eventId",
   Authentication,
   Authorization,
+  uploadMiddleware,
   eventController.addSpeaker
 );
 router.patch(

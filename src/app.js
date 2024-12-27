@@ -6,6 +6,8 @@ const helmet = require("helmet");
 const multer=require("multer")
 const public_routes = require("./routes/public");
 const private_routes = require("./routes/private");
+const path = require("path");
+const app = require("./uploads/imageRoute");
 
 
 const main = express();
@@ -16,12 +18,26 @@ main.use(helmet());
 main.use(express.json());
 //parse urlencoded request body
 main.use(express.urlencoded({ extended: true }));
+// main.use('/uploads', express.static(path.join(__dirname, 'src/uploads')));
+
+// main.use('/uploads', express.static(path.join(__dirname, 'src/uploads')));
+// main.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// main.use('/folder1', express.static(path.join(__dirname, 'folder1')));
+// main.use('/folder2', express.static(path.join(__dirname, 'folder2')));
+// main.use('/folder3', express.static(path.join(__dirname, 'folder3')));
+
+main.use('uploads/eventBookings', express.static(path.join(__dirname, 'uploads', 'eventBookings')));
+main.use('uploads/eventDetails', express.static(path.join(__dirname, 'uploads', 'eventDetails')));
+main.use('uploads/qrCode', express.static(path.join(__dirname, 'uploads', 'qrCode')));
+
+
 //enable cors
 main.use(cors());
 main.options("*", cors());
 
 main.use("/v1/api", public_routes);
 main.use("/v1/auth", private_routes);
+main.use("/public",app)
 
 main.use((err, req, res, next) => {
   if (err instanceof ApiError) {

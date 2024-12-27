@@ -26,6 +26,7 @@ module.exports.Banners = require('./banners.model').Banners;
 module.exports.Gallery = require('./banners.model').Gallery;
 module.exports.Thumbnail = require('./banners.model').Thumbnail;
 module.exports.EventTickets = require('./eventTickets.model.js').EventTickets;
+module.exports.SpeakerSchema = require('./speakers.model').SpeakerSchema;
 // module.exports.EventGallery = require('./eventGallery.model.js').EventGallery;
 // module.exports.EventHashtags = require('./eventHashtags.model.js').EventHashtags;
 // module.exports.EventLanguages = require('./eventLanguages.model').EventLanguages;

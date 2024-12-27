@@ -1,6 +1,6 @@
 const ApiError = require("../utils/ApiError");
 const httpStatus = require("http-status");
-const { Event, VideoLink, Banners, Gallery, Thumbnail, PackageType, EventPackage, EventTickets } = require("../models");
+const { Event, VideoLink, Banners, Gallery, Thumbnail, PackageType, EventPackage, EventTickets, SpeakerSchema } = require("../models");
 
 // Service functions for Event Management
 
@@ -82,31 +82,45 @@ const getPackageInfo = async (eventId) => {
   }
 };
 
-
-const addMedia = async ({ eventId, thumbnail, gallery, banners, videoLinks }) => {
-  console.log(eventId, thumbnail, gallery, banners, videoLinks, "---------------eventId,thumbnail,gallery,banners,videoLinks---------------");
+const addMedia = async ({ eventId, thumbnail, gallery, banners, video_link }) => {
   try {
+    // Validate eventId
+    if (!eventId) {
+      throw new ApiError(httpStatus.BAD_REQUEST, "Event ID is required");
+    }
+
     // Check if the event exists
     const event = await Event.findById(eventId);
     if (!event) {
       throw new ApiError(httpStatus.NOT_FOUND, "Event not found");
     }
 
+    console.log("---------------Gallery---------------", banners, "---------------Gallery---------------");
+
     // Save thumbnail in Thumbnail table
     if (thumbnail) {
+      if (!Array.isArray(thumbnail) || thumbnail.length === 0) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Invalid thumbnail file");
+      }
+
       const newThumbnail = new Thumbnail({
         event_id: eventId,
-        thumbnail_path: thumbnail.path, // Assuming file.path contains the thumbnail's location
+        thumbnail_path: thumbnail[0].filename, // Assuming file.filename contains the thumbnail's location
       });
       await newThumbnail.save();
     }
 
     // Save gallery files in Gallery table
     if (gallery && gallery.length > 0) {
+      const invalidGalleryFiles = gallery.filter(file => !file.filename);
+      if (invalidGalleryFiles.length > 0) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Some gallery files are invalid");
+      }
+
       const galleryPromises = gallery.map(file => {
         const newGallery = new Gallery({
           event_id: eventId,
-          gallery_path: file.path, // Assuming file.path contains the gallery file's location
+          gallery_path: file.filename, // Assuming file.filename contains the gallery file's location
         });
         return newGallery.save();
       });
@@ -115,10 +129,15 @@ const addMedia = async ({ eventId, thumbnail, gallery, banners, videoLinks }) =>
 
     // Save banners in Banners table
     if (banners && banners.length > 0) {
+      const invalidBannerFiles = banners.filter(file => !file.filename);
+      if (invalidBannerFiles.length > 0) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Some banner files are invalid");
+      }
+
       const bannersPromises = banners.map(file => {
         const newBanner = new Banners({
           event_id: eventId,
-          banner_path: file.path, // Assuming file.path contains the banner file's location
+          banner_path: file.filename, // Assuming file.filename contains the banner file's location
         });
         return newBanner.save();
       });
@@ -126,8 +145,13 @@ const addMedia = async ({ eventId, thumbnail, gallery, banners, videoLinks }) =>
     }
 
     // Save video links in VideoLink table
-    if (videoLinks && Array.isArray(videoLinks)) {
-      const videoLinkPromises = videoLinks.map(link => {
+    if (video_link && Array.isArray(video_link)) {
+      const invalidVideoLinks = video_link.filter(link => typeof link !== "string" || !link.trim());
+      if (invalidVideoLinks.length > 0) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Some video links are invalid");
+      }
+
+      const videoLinkPromises = video_link.map(link => {
         const newVideoLink = new VideoLink({
           event_id: eventId,
           video_link: link, // Assuming video link is a string URL
@@ -139,20 +163,38 @@ const addMedia = async ({ eventId, thumbnail, gallery, banners, videoLinks }) =>
 
     return { success: true, message: "Media added successfully" };
   } catch (error) {
+    // Log error for debugging
     console.error("Error saving media:", error);
-    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Error saving media", error);
+
+    // Check for custom ApiError and return its message
+    if (error instanceof ApiError) {
+      throw error; // Will be handled by global error middleware
+    }
+
+    // Return a generic error message if the error is not an ApiError
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
   }
 };
 
 
-const addSpeaker = async (eventId, speakerData) => {
+const addSpeaker = async (eventId, speakerData,profile_picture) => {
   const event = await Event.findById(eventId);
+ 
   if (!event) {
     throw new ApiError(httpStatus.NOT_FOUND, "Event not found");
   }
-  event.speakers.push(speakerData);
-  await event.save();
-  return { hotel: event, statusCode: httpStatus.OK };
+  if (!profile_picture) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Profile Picture not found");
+  }
+  try {
+    
+    const speckers= await SpeakerSchema.create({...speakerData,profile_picture:profile_picture[0].filename,event_id:eventId});
+
+     return { data:speckers, statusCode: 200 };
+  } catch (error) {
+    console.error(error, "---------------error---------------");
+    return { data:[], statusCode: 500 };
+  }
 };
 
 const updateBasicinfo = async (id, updateData) => {

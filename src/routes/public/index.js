@@ -1,5 +1,5 @@
 const express = require("express");
-
+const path=require("path")
 // const imageRoute = require('./images.route');
 // const publicAuth = require('./publicAuth.route')
 const eventRoute = require('./event.route')
@@ -15,6 +15,8 @@ const router = express.Router();
 // router.use("/auth-customer",  publicAuth);
 router.use("/event",eventRoute),
 router.use("/locations",locations),
+
+
 
 // router.use("/public", commonRoute)
 

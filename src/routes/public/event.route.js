@@ -13,13 +13,13 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     console.log(file)
     if (file.fieldname.includes("[pictures]")) {
-      cb(null, "uploads/eventBookings/"); // You can specify any directory where images will be stored
+      cb(null, path.join("src/uploads/eventBookings/")); // You can specify any directory where images will be stored
     }
     else if (file.fieldname === "customer_picture") {
-      cb(null, "uploads/eventDetails/"); // You can specify any directory where images will be stored
+      cb(null, "src/uploads/eventDetails/"); // You can specify any directory where images will be stored
     }
     else {
-      cb(null, "uploads/qrCode/"); // You can specify any directory where images will be stored
+      cb(null, "src/uploads/qrCode/"); // You can specify any directory where images will be stored
       // cb(new Error("Unsupported file field"));
     } // You can specify any directory where images will be stored
   },
@@ -64,6 +64,17 @@ const upload = multer({ storage: storage });
 //   }
 // });
 
+// Register Customer
+router.post(
+  "/register-customer",
+  eventTypeController.registerCustomer
+);
+
+// Login Customer
+router.post(
+  "/login-customer",
+  eventTypeController.loginCustomer
+);
 
 
 
@@ -73,6 +84,7 @@ const upload = multer({ storage: storage });
 
 // GET: Retrieve all event types
 router.get("/event-type", eventTypeController.getEventType);
+
 
 // POST: Create a new event type
 router.post(
