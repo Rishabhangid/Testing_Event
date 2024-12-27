@@ -1,6 +1,8 @@
 const httpStatus = require("http-status");
 const catchAsync = require("../utils/catchAsync");
 const { eventService } = require("../service");
+const passport = require("passport");
+const { password } = require("../validation/custom.validation");
 
 
 const getEvents = async (req, res) => {
@@ -312,3 +314,5 @@ module.exports = {
   getCreatedPackagelistbyEventId,
   getPackageInfo
 };
+
+

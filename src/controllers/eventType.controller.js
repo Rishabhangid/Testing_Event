@@ -158,7 +158,7 @@ const registerCustomer = async (req, res) => {
     await newCustomer.save();
 
     console.log("Customer Registered.");
-    res.status(201).json({ message: "Customer registered successfully", data: user });
+    res.status(201).json({success : true, message: "Customer registered successfully", data: user });
   } catch (error) {
     console.error("Error registering customer:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -1167,6 +1167,7 @@ const eventBooking = async (req, res) => {
 
     // res.status(200).json({ message: "Event booking successful." });
     res.status(200).json({
+      success: true,
       message: "Event booking completed successfully.",
       eventBooking: savedEventBooking,
     });
@@ -1228,7 +1229,7 @@ const updateEntry = async (req, res) => {
     // console.log("User updated.", eventBooking)
 
     // success response
-    res.status(200).json({ message: "Entry Updated.", eventBooking })
+    res.status(200).json({success: true, message: "Entry Updated.", eventBooking })
 
   }
   catch (error) {
@@ -1279,6 +1280,7 @@ const eventDetails = async (req, res) => {
     const savedEventDetails = await newEventDetails.save();
 
     res.status(201).json({
+      success: true,
       message: "Event details added successfully",
       data: savedEventDetails,
     });
