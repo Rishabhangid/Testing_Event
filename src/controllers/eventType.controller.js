@@ -812,12 +812,12 @@ const eventBooking = async (req, res) => {
       }
 
       const pictureFile = files.find(file => file.fieldname === `users[${index}][pictures]`);
-      if (!pictureFile) {
-        throw new Error("Picture file missing for user at index " + index);
-      }
+      // if (!pictureFile) {
+      //   throw new Error("Picture file missing for user at index " + index);
+      // }
 
       return {
-        pictures: pictureFile.filename,
+        pictures:pictureFile? pictureFile.filename : "",
         names: user.names,
         mobile_numbers: user.mobile_numbers,
         emails: user.emails,

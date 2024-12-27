@@ -2,6 +2,7 @@ const { User } = require("../models");
 const httpStatus = require("http-status");
 const ApiError = require("../utils/ApiError");
 const bcrypt = require("bcryptjs");
+const Customer = require("../models/customerSchema");
 
 const createUser = async (userBody) => {
   
@@ -19,9 +20,12 @@ const createUser = async (userBody) => {
 const getUserByEmail = async (email) => {
   return await User.findOne({ email: email });
 };
+const getCustomerByEmail = async (email) => {
+  return await Customer.findOne({ email: email });
+};
 
 const getUserByToken = async (remembertoken) => {
   return await User.findOne({ remembertoken: remembertoken });
 };
 
-module.exports = { createUser, getUserByEmail, getUserByToken };
+module.exports = { createUser, getUserByEmail, getUserByToken,getCustomerByEmail };

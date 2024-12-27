@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/config");
 const { tokenTypes } = require("../config/tokens.js");
 const { User } = require("../models/user.model");
+const Customer = require("../models/customerSchema.js");
 
 const generateToken = (userId, expires, type, secret = config.jwt.secret) => {
   const Payload = {
@@ -35,6 +36,28 @@ const generateAuthTokens = async (user) => {
     user: updatedUser
 };
 }
+const generateAuthCustomerTokens = async (user) => {
+ 
+  
+  const accessTokenExpires = Math.floor(Date.now() / 1000) + config.jwt.accessExpirationMinutes * 60;
+  
+  const accessToken = generateToken(
+    user._id,
+    accessTokenExpires,
+    tokenTypes.ACCESS
+  );
+  await Customer.updateOne(
+    { _id: user._id },
+    { $set: { remembertoken: accessToken } }
+  );
+  // Retrieve the updated user document
+  const updatedUser = await Customer.findById(user._id);
+  return {
+    token: accessToken,
+    expires: new Date(accessTokenExpires * 1000),
+    user: updatedUser
+};
+}
 /**
  
   const accessTokenExpires = Math.floor(Date.now() / 1000) + config.jwt.accessExpirationMinutes * 60;
@@ -56,5 +79,5 @@ const generateAuthTokens = async (user) => {
 
 module.exports = {
   generateToken,
-  generateAuthTokens,
+  generateAuthTokens,generateAuthCustomerTokens
 };
