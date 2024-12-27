@@ -48,57 +48,124 @@ const getEventType = async (req, res) => {
 // };
 
 // Register Customer
-const registerCustomer = async (req, res) => {
-  const customerData = req.body;
-  console.log("data", customerData);
 
+// const registerCustomer = async (req, res) => {
+//   const { first_name, last_name, email, number, password, passwordcnfrm } = req.body;
+//   console.log("data", req.body);
+
+//   try {
+//     // Validation for required fields
+//     if (!first_name || !last_name || !email || !number || !password || !passwordcnfrm) {
+//       return res.status(400).json({ error: "All fields are required" });
+//     }
+
+//     // Email validation
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (!emailRegex.test(email)) {
+//       return res.status(400).json({ error: "Invalid email format" });
+//     }
+
+//     // Phone number validation (assuming basic check for numbers)
+//     const phoneRegex = /^[0-9]{10}$/;
+//     if (!phoneRegex.test(number)) {
+//       return res.status(400).json({ error: "Invalid phone number format" });
+//     }
+
+//     // Password confirmation validation
+//     if (password !== passwordcnfrm) {
+//       return res.status(400).json({ error: "Passwords do not match" });
+//     }
+
+//     // Password length validation (optional, depending on your requirements)
+//     if (password.length < 8) {
+//       return res.status(400).json({ error: "Password must be at least 8 characters long" });
+//     }
+
+//     // Check if the email already exists in the database
+//     const existingCustomer = await Customer.findOne({ email });
+//     if (existingCustomer) {
+//       return res.status(400).json({ error: "Email already registered" });
+//     }
+
+//     // Hash the password
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     // Create a new customer record
+//     const newCustomer = new Customer({
+//       first_name,
+//       last_name,
+//       email,
+//       number,
+//       password: hashedPassword,
+//     });
+
+//     // Generate authentication tokens (optional based on your token service)
+//     const user = await tokenService.generateAuthTokens(newCustomer);
+
+//     // Save the new customer to the database
+//     await newCustomer.save();
+
+//     console.log("Customer Registered.");
+//     res.status(201).json({ message: "Customer registered successfully", data: user });
+//   } catch (error) {
+//     console.error("Error registering customer:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
+const registerCustomer = async (req, res) => {
+  const { first_name, last_name, email, number, password, passwordcnfrm } = req.body;
+
+  console.log("data", req.body);
 
   try {
     // Validation
-    for (const key in customerData) {
-      if (!customerData[key]) {
-        return res
-          .status(400)
-          .json({ error: `${key} is required and cannot be empty` });
-      }
+    if (!first_name || !last_name || !email || !number || !password || !passwordcnfrm) {
+      return res.status(400).json({ error: "All fields are required" });
     }
+
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(customerData.email)) {
+    if (!emailRegex.test(email)) {
       return res.status(400).json({ error: "Invalid email format" });
     }
 
-    // if (password.length < 8) {
-    //   return res.status(400).json({ error: "Password must be at least 8 characters long" });
-    // }
-
-    // if (password !== confirm_password) {
-    //   return res.status(400).json({ error: "Passwords do not match" });
-    // }
+    // Validate if passwords match
+    if (password !== passwordcnfrm) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
 
     // Check if the email already exists
-    const existingCustomer = await Customer.findOne({ email: customerData.email });
+    const existingCustomer = await Customer.findOne({ email });
     if (existingCustomer) {
       return res.status(400).json({ error: "Email already registered" });
     }
 
     // Hash the password
-    const hashedPassword = await bcrypt.hash(customerData.password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create a new customer
     const newCustomer = new Customer({
-      ...customerData,
+      first_name,
+      last_name,
+      email,
+      number,
       password: hashedPassword,
     });
-    const user = await tokenService.generateAuthTokens(newCustomer)
+
+    const user = await tokenService.generateAuthTokens(newCustomer);
+
+    // Save the customer
     await newCustomer.save();
 
-    console.log("Customer Registered.")
+    console.log("Customer Registered.");
     res.status(201).json({ message: "Customer registered successfully", data: user });
   } catch (error) {
     console.error("Error registering customer:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
 
 // Login Customer
 const loginCustomer = async (req, res) => {
