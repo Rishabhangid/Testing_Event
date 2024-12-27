@@ -9,7 +9,7 @@ const getEvents = async (req, res) => {
   console.log(req.body, "---------------req---------------");
   try {
     const getHotels = await eventService.getEvents();
-    res.json({ success: true, hotels: getHotels });
+    res.json({ success: true, events: getHotels });
   } catch (error) {
     console.log(error, "---------------error---------------");
     res.status(500).json({ success: false, message: "new Server Error" });

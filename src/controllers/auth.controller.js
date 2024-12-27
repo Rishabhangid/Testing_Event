@@ -1,6 +1,7 @@
 const httpStatus = require("http-status");
 const catchAsync = require("../utils/catchAsync");
 const { authService, userService, tokenService } = require("../service");
+const Customer = require("../models/customerSchema");
 
 
 const register = catchAsync(async (req, res) => {
@@ -19,13 +20,35 @@ const register = catchAsync(async (req, res) => {
 });
 
 const login = catchAsync(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, type } = req.body;
+  if(!email && !password && !type){
+    res.status(404).json({success: false, message:"Empty Feilds."})
+  }
+
+  const LoginType = type === "customer" ? Customer : Agent; 
+  console.log(LoginType)
+
   const user = await authService.loginUserWithEmailAndPassword(email, password);
   if (!user) {
   }
   const tokens = await tokenService.generateAuthTokens(user);
   res.status(200).send({ data: tokens });
 });
+
+
+// const login = catchAsync(async (req, res) => {
+//   const { email, password,type } = req.body;
+//   if(type ==="Customer"){
+  
+//   }else if(type=="Staff"){
+    
+//   }
+//   const user = await authService.loginUserWithEmailAndPassword(email, password);
+//   if (!user) {
+//   }
+//   const tokens = await tokenService.generateAuthTokens(user);
+//   res.status(200).send({ data: tokens });
+// });
 
 const logout = catchAsync(async (req, res) => {
   const { token } = req.body;

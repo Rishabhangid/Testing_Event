@@ -19,7 +19,9 @@ router.post(
   );
   
 // router.post("/register",validate(authValidation.register) , authController.register );
-router.post("/login",validate(authValidation.login), authController.login);
+
+router.post("/login", authController.login);
+
 router.post("/logout", authController.logout);
 
 
