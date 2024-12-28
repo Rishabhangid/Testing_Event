@@ -5,7 +5,7 @@ const validate = require('../../middlewares/validate')
 const authValidation = require("../../validation/auth.validation");
 const authController = require("../../controllers/auth.controller.js");
 const upload = require("../../middlewares/multer.js");
-const { checkEmailAndPhone } = require("../../middlewares/index.js");
+const { checkEmailAndPhone, Authentication } = require("../../middlewares/index.js");
 
 
 
@@ -21,6 +21,9 @@ router.post(
 // router.post("/register",validate(authValidation.register) , authController.register );
 
 router.post("/login", authController.login);
+
+
+router.get("/userinfo",Authentication, authController.get_userInfo_token);
 
 router.post("/logout", authController.logout);
 

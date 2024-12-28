@@ -45,8 +45,11 @@ const login = catchAsync(async (req, res) => {
   if (!user) {
     res.status(400).json({success: false, message:"Login failed."})
   }
+  // const { remembertoken, ...userWithoutToken } = user.toObject();
+  // console.log(userWithoutToken)
   const tokens = await tokenService.generateAuthTokens(user);
   res.status(200).send({success: true, message:"Login Successfull", data: tokens });
+  // res.status(200).send({success: true, message:"Login Successfull", data: userWithoutToken });
 });
 
 const logout = catchAsync(async (req, res) => {
@@ -55,8 +58,22 @@ const logout = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).send({ message: "Logout successful" });
 });
 
+const get_userInfo_token = async (req, res)=>{
+  try{
+  //  console.log("user id: ",req.user.sub)
+   const find_user_info = await User.findById({_id:req.user.sub})
+  //  console.log("user details :",find_user_info)
+   res.status(200).json({success: true, message:"User Details Found.", find_user_info})
+  }
+  catch (error){
+    console.log(error)
+    res.status(500).json({success: true, error})
+  }
+}
+
 module.exports = {
   register,
   login,
   logout,
+  get_userInfo_token
 };

@@ -170,7 +170,7 @@ const registerCustomer = async (req, res) => {
 // Login Customer
 const loginCustomer = async (req, res) => {
   const { email, password } = req.body;
-  console.log("data", email, password);
+  // console.log("data", email, password);
 
   try {
     // Validate inputs
@@ -189,6 +189,7 @@ const loginCustomer = async (req, res) => {
       return res.status(404).json({ error: "Customer not found" });
     }
 
+    console.log("******",customer)
     // Compare the provided password with the hashed password in the database
     const isPasswordValid = await bcrypt.compare(password, customer.password);
     if (!isPasswordValid) {
@@ -202,12 +203,13 @@ const loginCustomer = async (req, res) => {
     //   { expiresIn: process.env.JWT_ACCESS_EXPIRATION_MINUTES }
     // );
     const user = await tokenService.generateAuthTokens(customer)
+    // console.log("^^^^^",user)
 
     // Successful login response
     res.status(200).json({
       success: true,
       message: "Login successful",
-      data: user, // Optional: Include the token if you're using JWT
+      data: customer, // Optional: Include the token if you're using JWT
     });
   } catch (error) {
     console.error("Error logging in customer:", error);
