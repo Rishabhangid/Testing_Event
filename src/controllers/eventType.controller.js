@@ -158,7 +158,7 @@ const registerCustomer = async (req, res) => {
     await newCustomer.save();
 
     console.log("Customer Registered.");
-    res.status(201).json({success : true, message: "Customer registered successfully", data: user });
+    res.status(201).json({ success: true, message: "Customer registered successfully", data: user });
   } catch (error) {
     console.error("Error registering customer:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -817,7 +817,7 @@ const eventBooking = async (req, res) => {
       // }
 
       return {
-        pictures:pictureFile? pictureFile.filename : "",
+        pictures: pictureFile ? pictureFile.filename : "",
         names: user.names,
         mobile_numbers: user.mobile_numbers,
         emails: user.emails,
@@ -1039,57 +1039,52 @@ const eventBooking = async (req, res) => {
       </style>
     </head>
     <body>
-        <div class="container" style="background-image: url('cid:bcakImg'); background-position: center; background-size: center;">
-          <div class="header" style="margin-top: 20px;">
-            <div>
-              <img src="cid:logo" style="width: 60px; height: auto;" alt="Logo">
-              <img src="cid:event"  style="width: 220px; height: auto;" alt="Logo" class="mainlogo" alt="Logo">
-              <img src="cid:india"  style="width: 120px; height: auto;" alt="Logo" alt="Logo">
-            </div>
-            <div class="title">11TH <span class="title2">INDIA INDUSTRIAL FAIR 2025</span></div>
-            <div class="date-location">10-13 JANUARY</div>
+        <div class="container" style="max-width: 600px; background-color: #FBF1E8; border-radius: 10px; margin: auto; padding: 20px; box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); font-family: Arial, sans-serif;">
+  <div class="header" style="text-align: center;">
+    <img src="cid:logo" style="width: 60px; height: auto; margin-bottom: 10px;" alt="Logo">
+    <img src="cid:event" style="width: 220px; height: auto; margin-bottom: 10px;" alt="Event Logo">
+    <img src="cid:india" style="width: 120px; height: auto; margin-bottom: 10px;" alt="Make in India">
+    <div class="title" style="font-size: 22px; color: #000; font-weight: 700; margin: 10px 0;">11TH <span style="color: #E5552E;">INDIA INDUSTRIAL FAIR 2025</span></div>
+    <div class="date-location" style="color: #d9534f; font-size: 22px; font-weight: 900; margin: 15px 0;">10-13 JANUARY</div>
+    <div class="date-location2" style="text-align: center; color: #d9534f; font-size: 22px; font-weight: 900; margin: 15px 0;">
+      <table style="width: 100%; table-layout: fixed;">
+        <tr>
+          <td style="padding: 0;">
+            <img src="cid:location" style="width: 30px; height: auto; vertical-align: middle;" alt="Location">
+            <span style="vertical-align: middle;">DPS GROUND, BHUWANA, UDAIPUR</span>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
 
-            <div class="date-location2" style="text-align: center;">
-             <table role="presentation" style="width: 100%; table-layout: fixed; text-align: center;">
-               <tr>
-                 <td style="padding: 0; vertical-align: middle;">
-                   <img src="cid:location" class="loc" style="width: 30px; height: 30px; object-fit: cover; vertical-align: middle;" alt="location"/>
-                   <span style="vertical-align: middle;">DPS GROUND, BHUWANA, UDAIPUR</span>
-                 </td>
-                </tr>
-             </table>
-            </div>
-          </div>
+  <div class="visitors-section" style="border: 3px solid #000; border-radius: 10px; background-color: #FBF1E8; padding: 15px; text-align: center; font-weight: bold; font-size: 20px; margin: 15px auto; max-width: 70%;">
+    <div class="heading" style="font-size: 24px; font-weight: 900; color: #000;">VISITORS</div>
+    <img src="cid:qrcode" style="margin-top: 10px;" alt="QR Code">
+    <div class="username" style="font-size: 18px; font-weight: 900; color: #000; margin-top: 10px;">${user.names}</div>
+  </div>
 
-          <div class="visitors-section">
-            <div class="heading">VISITORS</div>
-            <img src="cid:qrcode" alt="QR Code"/>
-            <div class="username">${user.names}</div>
-          </div>
-          <div class="line"></div>
-          <div class="footer">
-           <div class="title">OUR SPONSOR</div>
-           <div style="text-align: center; margin-top: 20px;">
-            <table align="center" style="width: 100%; border-spacing: 0; border-collapse: collapse;">
-              <tr>
-                <td align="center" style="">
-                  <img src="cid:sponsor1" alt="Sponsor 1" style="width: 100px; height: auto;">
-                </td>
-                <td align="center" style="">
-                  <img src="cid:sponsor2" alt="Sponsor 2" style="width: 100px; height: auto;">
-                </td>
-                <td align="center" style="">
-                  <img src="cid:sponsor3" alt="Sponsor 3" style="width: 100px; height: auto;">
-                </td>
-                <td align="center" style="">
-                  <img src="cid:sponsor4" alt="Sponsor 4" style="width: 100px; height: auto;">
-                </td>
-              </tr>
-            </table>
-         </div>
+  <div class="footer" style="text-align: center; margin-top: 20px;">
+    <div class="title" style="font-size: 22px; color: #000; font-weight: 700;">OUR SPONSOR</div>
+    <table align="center" style="width: 100%; margin-top: 20px; table-layout: fixed;">
+      <tr>
+        <td align="center" style="padding: 5px;">
+          <img src="cid:sponsor1" style="max-width: 100px; height: auto;" alt="Sponsor 1">
+        </td>
+        <td align="center" style="padding: 5px;">
+          <img src="cid:sponsor2" style="max-width: 100px; height: auto;" alt="Sponsor 2">
+        </td>
+        <td align="center" style="padding: 5px;">
+          <img src="cid:sponsor3" style="max-width: 100px; height: auto;" alt="Sponsor 3">
+        </td>
+        <td align="center" style="padding: 5px;">
+          <img src="cid:sponsor4" style="max-width: 100px; height: auto;" alt="Sponsor 4">
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
 
-          </div>
-        </div>
       
     </body>
     </html>`, // HTML content here
@@ -1229,7 +1224,7 @@ const updateEntry = async (req, res) => {
     // console.log("User updated.", eventBooking)
 
     // success response
-    res.status(200).json({success: true, message: "Entry Updated.", eventBooking })
+    res.status(200).json({ success: true, message: "Entry Updated.", eventBooking })
 
   }
   catch (error) {

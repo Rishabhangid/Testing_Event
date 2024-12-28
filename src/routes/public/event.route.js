@@ -1,15 +1,12 @@
 const express = require("express");
-const { eventTypeController } = require("../../controllers");
 const router = express.Router();
-const { Authentication, Authorization } = require("../../middlewares");
-const path = require('path');
-
-
 const multer = require("multer");
+const path = require('path');
+const { eventTypeController } = require("../../controllers");
+const { Authentication, Authorization } = require("../../middlewares");
 
-// old2
+// Multer Confrigutiono
 const storage = multer.diskStorage({
-
   destination: (req, file, cb) => {
     console.log(file)
     if (file.fieldname.includes("[pictures]")) {

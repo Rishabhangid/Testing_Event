@@ -46,7 +46,7 @@ const login = catchAsync(async (req, res) => {
     res.status(400).json({success: false, message:"Login failed."})
   }
   const tokens = await tokenService.generateAuthTokens(user);
-  res.status(200).send({ data: tokens });
+  res.status(200).send({success: true, message:"Login Successfull", data: tokens });
 });
 
 const logout = catchAsync(async (req, res) => {
