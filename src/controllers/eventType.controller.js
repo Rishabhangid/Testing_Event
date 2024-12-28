@@ -17,6 +17,7 @@ const path = require("path"); // Import path for handling file paths
 const nodemailer = require('nodemailer');
 const Customer = require("../models/customerSchema");
 const { tokenService } = require("../service");
+const { custom } = require("joi");
 // Email configuration to send qr codeon email
 const transporter = nodemailer.createTransport({
   service: 'Gmail', // You can use another email service
@@ -168,9 +169,59 @@ const registerCustomer = async (req, res) => {
 
 
 // Login Customer
+// const loginCustomer = async (req, res) => {
+//   const { email, password } = req.body;
+//   // console.log("data", email, password);
+
+//   try {
+//     // Validate inputs
+//     if (!email || !password) {
+//       return res.status(400).json({ error: "Email and password are required" });
+//     }
+
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (!emailRegex.test(email)) {
+//       return res.status(400).json({ error: "Invalid email format" });
+//     }
+
+//     // Check if the customer exists
+//     const customer = await Customer.findOne({ email });
+//     if (!customer) {
+//       return res.status(404).json({ error: "Customer not found" });
+//     }
+
+//     console.log("******", customer)
+//     // Compare the provided password with the hashed password in the database
+//     const isPasswordValid = await bcrypt.compare(password, customer.password);
+//     if (!isPasswordValid) {
+//       return res.status(401).json({ success: false, error: "Invalid email or password" });
+//     }
+
+//     // Generate a JWT token (optional, if using JWT for authentication)
+//     // const token = jwt.sign(
+//     //   { id: customer._id, email: customer.email },
+//     //   process.env.JWT_SECRET,
+//     //   { expiresIn: process.env.JWT_ACCESS_EXPIRATION_MINUTES }
+//     // );
+//     const user = await tokenService.generateAuthTokens(customer)
+//     // console.log("^^^^^",user)
+
+
+//     // Successful login response
+//     res.status(200).json({
+//       success: true,
+//       message: "Login successful",
+//       data: user, // Optional: Include the token if you're using JWT
+//       user: customer
+//     });
+//   } catch (error) {
+//     console.error("Error logging in customer:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+
+// };
 const loginCustomer = async (req, res) => {
   const { email, password } = req.body;
-  // console.log("data", email, password);
 
   try {
     // Validate inputs
@@ -184,39 +235,36 @@ const loginCustomer = async (req, res) => {
     }
 
     // Check if the customer exists
-    const customer = await Customer.findOne({ email });
+    const customer = await Customer.findOne({ email }).select("-password"); // Exclude password
     if (!customer) {
       return res.status(404).json({ error: "Customer not found" });
     }
 
-    console.log("******",customer)
+    // Retrieve the full customer object with the password for validation
+    const fullCustomer = await Customer.findOne({ email });
+    
     // Compare the provided password with the hashed password in the database
-    const isPasswordValid = await bcrypt.compare(password, customer.password);
+    const isPasswordValid = await bcrypt.compare(password, fullCustomer.password);
     if (!isPasswordValid) {
       return res.status(401).json({ success: false, error: "Invalid email or password" });
     }
 
     // Generate a JWT token (optional, if using JWT for authentication)
-    // const token = jwt.sign(
-    //   { id: customer._id, email: customer.email },
-    //   process.env.JWT_SECRET,
-    //   { expiresIn: process.env.JWT_ACCESS_EXPIRATION_MINUTES }
-    // );
-    const user = await tokenService.generateAuthTokens(customer)
-    // console.log("^^^^^",user)
+    const user = await tokenService.generateAuthTokens(fullCustomer);
 
     // Successful login response
     res.status(200).json({
       success: true,
       message: "Login successful",
-      data: customer, // Optional: Include the token if you're using JWT
+      data: user, // Include the token if you're using JWT
+      user: customer, // `customer` already has the password excluded
     });
   } catch (error) {
     console.error("Error logging in customer:", error);
     res.status(500).json({ error: "Internal server error" });
   }
-
 };
+
 
 
 
