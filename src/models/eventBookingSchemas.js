@@ -22,7 +22,8 @@ const eventBookingSchemaNew = new mongoose.Schema({
 
 
 
-const EventBookingNews = mongoose.model("event_updated_booking", eventBookingSchemaNew);
+const EventBookingNews = mongoose.model("Booking_details", eventBookingSchemaNew);
+// event_updated_booking
 
 module.exports = EventBookingNews;
 

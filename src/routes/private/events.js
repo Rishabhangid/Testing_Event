@@ -45,7 +45,7 @@ const uploadMiddleware = multer({
 
 //View
 // router.get("/event-list", Authentication, Authorization, eventController.getEvents);
-router.get("/event-list", Authentication,  eventController.getEvents);
+router.get("/event-list",  eventController.getEvents);
 
 router.get(
   "/event-list/:id",
