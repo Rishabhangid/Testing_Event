@@ -1213,7 +1213,7 @@ const eventBooking = async (req, res) => {
     // res.status(200).json({ message: "Event booking successful." });
     res.status(200).json({
       success: true,
-      message: "Event booking completed successfully.",
+      message: "Attended Created Succesfully.",
       eventBooking: savedEventBooking,
     });
   } catch (err) {
