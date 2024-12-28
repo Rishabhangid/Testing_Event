@@ -62,16 +62,16 @@ const upload = multer({ storage: storage });
 // });
 
 // Register Customer
-router.post(
-  "/register-customer",
-  eventTypeController.registerCustomer
-);
+// router.post(
+//   "/register-customer",
+//   eventTypeController.registerCustomer
+// );
 
-// Login Customer
-router.post(
-  "/login-customer",
-  eventTypeController.loginCustomer
-);
+// // Login Customer
+// router.post(
+//   "/login-customer",
+//   eventTypeController.loginCustomer
+// );
 
 
 

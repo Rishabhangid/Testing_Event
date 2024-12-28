@@ -26,6 +26,11 @@ const customerSchema = new mongoose.Schema(
       required: true,
       minlength: 8,
     },
+    role: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
+      required: true
+    }
   },
   {
     timestamps: true,

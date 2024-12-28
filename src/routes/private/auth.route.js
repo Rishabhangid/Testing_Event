@@ -9,22 +9,28 @@ const { checkEmailAndPhone, Authentication } = require("../../middlewares/index.
 
 
 
-
+//Admin,Admin Staff,Agency,Agency-Staff
 router.post(
-    "/register",
-    upload.single("profile_picture"), 
-    checkEmailAndPhone,
-    validate(authValidation.register),
-    authController.register
-  );
-  
-// router.post("/register",validate(authValidation.register) , authController.register );
+  "/register",
+  upload.single("profile_picture"),
+  checkEmailAndPhone,
+  validate(authValidation.register),
+  authController.register
+);
 
+// Admin , Staff.... Login
 router.post("/login", authController.login);
 
+//Customer Register
+router.post("/register-customer", authController.registerCustomer);
 
-router.get("/userinfo",Authentication, authController.get_userInfo_token);
+// Customer Login
+router.post("/login-customer", authController.loginCustomer);
 
+// Fetching User Info By Token
+router.get("/userinfo", Authentication, authController.get_userInfo_token);
+
+// Logout Admin.....
 router.post("/logout", authController.logout);
 
 
