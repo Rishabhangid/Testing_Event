@@ -83,59 +83,6 @@ const get_userInfo_token = async (req, res) => {
 
 
 //Customer Register
-const registerCustomers = catchAsync(async (req, res) => {
-  const { first_name, last_name, email, number, password, passwordcnfrm } = req.body;
-
-  console.log("data", req.body);
-
-  try {
-    // Validation
-    if (!first_name || !last_name || !email || !number || !password || !passwordcnfrm) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: "Invalid email format" });
-    }
-
-    // Validate if passwords match
-    if (password !== passwordcnfrm) {
-      return res.status(400).json({ error: "Passwords do not match" });
-    }
-
-    // Check if the email already exists
-    const existingCustomer = await Customer.findOne({ email });
-    if (existingCustomer) {
-      return res.status(400).json({ error: "Email already registered" });
-    }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create a new customer
-    const newCustomer = new Customer({
-      first_name,
-      last_name,
-      email,
-      number,
-      password: hashedPassword,
-    });
-
-    const user = await tokenService.generateAuthTokens(newCustomer);
-
-    // Save the customer
-    await newCustomer.save();
-
-    console.log("Customer Registered.");
-    res.status(201).json({ success: true, message: "Customer registered successfully", data: user });
-  } catch (error) {
-    console.error("Error registering customer:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
 const registerCustomer = catchAsync(async (req, res) => {
   const { first_name, last_name, email, number, password, passwordcnfrm } = req.body;
 
@@ -196,53 +143,60 @@ const registerCustomer = catchAsync(async (req, res) => {
   }
 });
 
-
-
-
 //  Customer Login
+// const loginCustomers = catchAsync(async (req, res) => {
+//   const { email, password } = req.body;
+
+//   try {
+//     // Validate inputs
+//     if (!email || !password) {
+//       return res.status(400).json({ error: "Email and password are required" });
+//     }
+
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (!emailRegex.test(email)) {
+//       return res.status(400).json({ error: "Invalid email format" });
+//     }
+
+//     // Check if the customer exists
+//     const customer = await Customer.findOne({ email }).select("-password"); // Exclude password
+//     if (!customer) {
+//       return res.status(404).json({ error: "Customer not found" });
+//     }
+
+//     // Retrieve the full customer object with the password for validation
+//     const fullCustomer = await Customer.findOne({ email });
+
+//     // Compare the provided password with the hashed password in the database
+//     const isPasswordValid = await bcrypt.compare(password, fullCustomer.password);
+//     if (!isPasswordValid) {
+//       return res.status(401).json({ success: false, error: "Invalid email or password" });
+//     }
+
+//     // Generate a JWT token (optional, if using JWT for authentication)
+//     const tokens = await tokenService.generateAuthTokens(fullCustomer);
+
+//     // Successful login response
+//     // res.status(200).json({ success: true, message: "Login successful", data: user, user: customer });
+//     res.status(200).json({ success: true, message: "Login successful", data: tokens });
+//     // res.status(200).send({ success: true, message: "Login Successfull", data: tokens });
+//   } catch (error) {
+//     console.error("Error logging in customer:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
 const loginCustomer = catchAsync(async (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    // Validate inputs
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: "Invalid email format" });
-    }
-
-    // Check if the customer exists
-    const customer = await Customer.findOne({ email }).select("-password"); // Exclude password
-    if (!customer) {
-      return res.status(404).json({ error: "Customer not found" });
-    }
-
-    // Retrieve the full customer object with the password for validation
-    const fullCustomer = await Customer.findOne({ email });
-
-    // Compare the provided password with the hashed password in the database
-    const isPasswordValid = await bcrypt.compare(password, fullCustomer.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ success: false, error: "Invalid email or password" });
-    }
-
-    // Generate a JWT token (optional, if using JWT for authentication)
-    const user = await tokenService.generateAuthTokens(fullCustomer);
-
-    // Successful login response
-    res.status(200).json({
-      success: true,
-      message: "Login successful",
-      data: user, // Include the token if you're using JWT
-      user: customer, // `customer` already has the password excluded
-    });
-  } catch (error) {
-    console.error("Error logging in customer:", error);
-    res.status(500).json({ error: "Internal server error" });
+  const user = await authService.loginCustomerWithEmailAndPassword(email, password);
+  if (!user) {
+    res.status(400).json({ success: false, message: "Login failed." })
   }
+  // const tokens = await tokenService.generateAuthTokens(user);
+  const tokens = await tokenService.generateCustomerAuthTokens(user);
+  res.status(200).send({ success: true, message: "Login Successfull", data: tokens });
+  // res.status(200).send({success: true, message:"Login Successfull", data: userWithoutToken });
 });
 
 

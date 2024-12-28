@@ -17,6 +17,20 @@ const loginUserWithEmailAndPassword = async (email, password) => {
   return user;
 };
 
+const loginCustomerWithEmailAndPassword = async (email, password) => {
+  const user = await userService.getCustomerByEmail(email)
+
+
+  if (!user) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Incorrect email");
+  }
+  const isPasswordMatch = await bcrypt.compare(password, user.password);
+  if (!isPasswordMatch) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Incorrect password");
+  }
+  return user;
+};
+
 const logoutUser = async (token) => {
   const user = await userService.getUserByToken(token);
   if (user) {
@@ -27,5 +41,6 @@ const logoutUser = async (token) => {
 
 module.exports = {
   loginUserWithEmailAndPassword,
+  loginCustomerWithEmailAndPassword,
   logoutUser
 };

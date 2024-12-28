@@ -117,10 +117,16 @@ router.get(
 
 // POST: Adding new booking
 router.post(
-  "/addbooking",
+  "/addbooking/:eventid",
   upload.any("pictures", 10),
+  Authentication,
   eventTypeController.eventBooking
 );
+// router.post(
+//   "/addbooking",
+//   upload.any("pictures", 10),
+//   eventTypeController.eventBooking
+// );
 
 // GET:  
 router.get(

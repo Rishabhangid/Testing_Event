@@ -14,7 +14,7 @@ const auth = async (req, res, next) => {
 		}
 		// Verify the extracted JWT with the secret key from config
 		const decode = jwt.verify(token, config.jwt.secret);
-		console.log("token verified.")
+		// console.log("token verified.")
 		// Store the decoded JWT payload in the request object for further use
 		req.user = decode;
 		next();

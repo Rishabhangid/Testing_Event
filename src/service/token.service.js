@@ -14,6 +14,7 @@ const generateToken = (userId, expires, type, secret = config.jwt.secret) => {
   return jwt.sign(Payload, secret)
 };
 
+
 const generateAuthTokens = async (user) => {
  
   
@@ -36,6 +37,30 @@ const generateAuthTokens = async (user) => {
     user: updatedUser
 };
 }
+
+const generateCustomerAuthTokens = async (user) => {
+ 
+  
+  const accessTokenExpires = Math.floor(Date.now() / 1000) + config.jwt.accessExpirationMinutes * 60;
+  
+  const accessToken = generateToken(
+    user._id,
+    accessTokenExpires,
+    tokenTypes.ACCESS
+  );
+  await Customer.updateOne(
+    { _id: user._id },
+    { $set: { remembertoken: accessToken } }
+  );
+  // Retrieve the updated user document
+  const updatedUser = await Customer.findById(user._id);
+  return {
+    token: accessToken,
+    expires: new Date(accessTokenExpires * 1000),
+    user: updatedUser
+};
+}
+
 const generateAuthCustomerTokens = async (user) => {
  
   
@@ -79,5 +104,5 @@ const generateAuthCustomerTokens = async (user) => {
 
 module.exports = {
   generateToken,
-  generateAuthTokens,generateAuthCustomerTokens
+  generateAuthTokens,generateAuthCustomerTokens, generateCustomerAuthTokens
 };
