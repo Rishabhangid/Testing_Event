@@ -6,7 +6,7 @@ const { password } = require('../validation/custom.validation');
 const app = express();
 
 // Define the route to serve the image
-app.get('/get-image/:id', (req, res) => {
+app.get('/image/:id', (req, res) => {
     const image_to_find = req.params.id
     // console.log(image_to_find)
     // console.log(__dirname, "---------------__dirname---------------");
@@ -20,7 +20,7 @@ app.get('/get-image/:id', (req, res) => {
     });
 });
 
-app.get('/get-qr/:id', (req, res) => {
+app.get('/qr/:id', (req, res) => {
     const image_to_find = req.params.id
     // console.log(image_to_find)
     // console.log(__dirname, "---------------__dirname---------------");
@@ -34,7 +34,7 @@ app.get('/get-qr/:id', (req, res) => {
     });
 });
 
-app.get('/get-event/:id', (req, res) => {
+app.get('/event/:id', (req, res) => {
     const image_to_find = req.params.id
     // console.log(image_to_find)
     // console.log(__dirname, "---------------__dirname---------------");

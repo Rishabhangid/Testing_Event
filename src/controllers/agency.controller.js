@@ -17,7 +17,8 @@ const createAgency = async (req, res) => {
     const data = {
       ...req.body,
       username:req.body.firstname+" "+req.body.lastname,
-      role: "675abe50c43c6973f28d34c1", 
+      // role: "675abe50c43c6973f28d34c1", 
+      role: "675abe45c43c6973f28d34bf", 
       profile_picture: req.files["profile_picture"][0].filename,
       aadhar_front: req.files["aadhar_front"][0].filename,
       aadhar_back: req.files["aadhar_back"][0].filename,

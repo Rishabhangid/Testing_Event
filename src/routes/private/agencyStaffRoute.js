@@ -36,12 +36,14 @@ router.post(
 );
 
 router.get("/get-agency-staff", Authentication, Authorization, getAllAgencyStaff);
+
 router.get(
   "/get-agency-staff/:id",
   Authentication,
   Authorization,
   getAgencyStaffById
 );
+
 router.patch(
   "/update-agency-staff/:id",
   Authentication,
@@ -49,6 +51,7 @@ router.patch(
   uploadMiddleware,
   updateAgencyStaff
 );
+
 router.delete(
   "/delete-agency-staff/:id",
   Authentication,
