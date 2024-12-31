@@ -1050,13 +1050,18 @@ const eventBooking = async (req, res) => {
   try {
     // 6763cf93822b612f06dbd5e1
     // console.log("req.params.eventid", req.params.eventid)
-    const find_event = await Event.findById( req.params.eventid )
+    // const find_event = await Event.findById( req.params.eventid )
+    const find_event = await Event.findById(req.params.eventid).select('start_date end_date');
+
     // console.log("event", find_event)
 
 
     const qrCodeDirectory = path.join(__dirname, '../uploads', 'qrCode');
     if (!fs.existsSync(qrCodeDirectory)) {
-      fs.mkdirSync(qrCodeDirectory, { recursive: true });
+      // fs.mkdirSync(qrCodeDirectory, { recursive: true });
+
+      await fs.promises.mkdir(qrCodeDirectory, { recursive: true });
+
     }
 
     const bookingDetailsArray = [];
@@ -1077,7 +1082,7 @@ const eventBooking = async (req, res) => {
       // event_to_date: new Date(),
       event_to_date: find_event.end_date,
       ticket_id: ticketId,
-      ticket_price: 1000,
+      ticket_price: 0,
       no_of_members: totalMembers,
       booked_by: "6770c8deba668872f67b794a",
       booked_at: new Date(),
@@ -1312,6 +1317,7 @@ const eventBooking = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 
 

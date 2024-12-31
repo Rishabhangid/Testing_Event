@@ -53,94 +53,94 @@ module.exports = BookingDetails;
 
 
 const eventBooking = async (req, res) => {
-  try {
-    // qrCodeDirectory
-    console.log("hiiting")
-    console.log("User who is booking, ID: ", req.user.sub)
-    console.log("User who is booking, ID: ", req.params.eventid)
-    const { users } = req.body;
-    // console.log("Users from front", req.body);
-    // console.log(req.files, "req.files");
+    try {
+        // qrCodeDirectory
+        console.log("hiiting")
+        console.log("User who is booking, ID: ", req.user.sub)
+        console.log("User who is booking, ID: ", req.params.eventid)
+        const { users } = req.body;
+        // console.log("Users from front", req.body);
+        // console.log(req.files, "req.files");
 
-    const files = req.files.map((file) => ({
-      ...file,
-      normalizedPath: file.path.replace(/\\/g, "/"),
-    }));
-    // user_booking
+        const files = req.files.map((file) => ({
+            ...file,
+            normalizedPath: file.path.replace(/\\/g, "/"),
+        }));
+        // user_booking
 
-    // console.log("Files with normalized paths", files);
+        // console.log("Files with normalized paths", files);
 
-    const filePaths = req.files.map(file => path.normalize(file.path));
-    // console.log("Normalized file paths:", filePaths);
+        const filePaths = req.files.map(file => path.normalize(file.path));
+        // console.log("Normalized file paths:", filePaths);
 
-    if (!users || users.length === 0) {
-      return res.status(400).json({ error: "Users array is empty." });
-    }
+        if (!users || users.length === 0) {
+            return res.status(400).json({ error: "Users array is empty." });
+        }
 
-    const usersArray = users.map((user, index) => {
-      if (!user.names || !user.mobile_numbers || !user.emails) {
-        throw new Error("Missing required fields for user at index " + index);
-      }
+        const usersArray = users.map((user, index) => {
+            if (!user.names || !user.mobile_numbers || !user.emails) {
+                throw new Error("Missing required fields for user at index " + index);
+            }
 
-      const pictureFile = files.find(file => file.fieldname === `users[${index}][pictures]`);
-      // if (!pictureFile) {
-      //   throw new Error("Picture file missing for user at index " + index);
-      // }
-      let uniqueCode = `${new Date().getTime()}${Math.floor(10 + Math.random() * 90)}`;
+            const pictureFile = files.find(file => file.fieldname === `users[${index}][pictures]`);
+            // if (!pictureFile) {
+            //   throw new Error("Picture file missing for user at index " + index);
+            // }
+            let uniqueCode = `${new Date().getTime()}${Math.floor(10 + Math.random() * 90)}`;
 
-      return {
-        pictures: pictureFile ? pictureFile.filename : "",
-        names: user.names,
-        mobile_numbers: user.mobile_numbers,
-        emails: user.emails,
-        organization_names: user.organization_names,
-        cities: user.cities,
-        created_at: new Date(),
-        updated_at: new Date(),
-        code: uniqueCode,
-      };
-    });
+            return {
+                pictures: pictureFile ? pictureFile.filename : "",
+                names: user.names,
+                mobile_numbers: user.mobile_numbers,
+                emails: user.emails,
+                organization_names: user.organization_names,
+                cities: user.cities,
+                created_at: new Date(),
+                updated_at: new Date(),
+                code: uniqueCode,
+            };
+        });
 
-    // console.log("Users array:", usersArray);
+        // console.log("Users array:", usersArray);
 
-    const savedEventBooking = new EventBookingNews({ users: usersArray });
-    savedEventBooking.ticket_booker = req.user.sub;
-    savedEventBooking.eventId = req.params.eventid;
-    await savedEventBooking.save();
+        const savedEventBooking = new EventBookingNews({ users: usersArray });
+        savedEventBooking.ticket_booker = req.user.sub;
+        savedEventBooking.eventId = req.params.eventid;
+        await savedEventBooking.save();
 
 
 
-    const qrCodeDirectory = path.join(__dirname, '../uploads', 'qrCode');
-    if (!fs.existsSync(qrCodeDirectory)) {
-      fs.mkdirSync(qrCodeDirectory, { recursive: true });
-    }
+        const qrCodeDirectory = path.join(__dirname, '../uploads', 'qrCode');
+        if (!fs.existsSync(qrCodeDirectory)) {
+            fs.mkdirSync(qrCodeDirectory, { recursive: true });
+        }
 
-    const emailPromises = savedEventBooking.users.map(async (user, index) => {
+        const emailPromises = savedEventBooking.users.map(async (user, index) => {
 
-      const uniqueCode = `${new Date().getTime()}${Math.floor(10 + Math.random() * 90)}`;
+            const uniqueCode = `${new Date().getTime()}${Math.floor(10 + Math.random() * 90)}`;
 
-      console.log(uniqueCode)
-      const userId = user._id;
-      const qrCodeFilePath = path.join(qrCodeDirectory, `qrcode_${index}_${userId}.png`);
-      const qrData = JSON.stringify({ user_id: userId, unique_code: uniqueCode });
-      // await QRCode.toFile(qrCodeFilePath, `${userId}`, {
-      await QRCode.toFile(qrCodeFilePath, qrData, {
-        color: { dark: '#000000', light: '#fbf1e8' },
-        width: 300,
-      });
+            console.log(uniqueCode)
+            const userId = user._id;
+            const qrCodeFilePath = path.join(qrCodeDirectory, `qrcode_${index}_${userId}.png`);
+            const qrData = JSON.stringify({ user_id: userId, unique_code: uniqueCode });
+            // await QRCode.toFile(qrCodeFilePath, `${userId}`, {
+            await QRCode.toFile(qrCodeFilePath, qrData, {
+                color: { dark: '#000000', light: '#fbf1e8' },
+                width: 300,
+            });
 
-      const fileName = path.basename(qrCodeFilePath);
-      user.qr_code = fileName;
-      // user[index].code = uniqueCode;
+            const fileName = path.basename(qrCodeFilePath);
+            user.qr_code = fileName;
+            // user[index].code = uniqueCode;
 
-      // savedEventBooking.markModified(`users.${index}`);
+            // savedEventBooking.markModified(`users.${index}`);
 
-      await transporter.sendMail({
-        from: '"Event Booking Confirmation" <your-email@gmail.com>',
-        to: user.emails,
-        subject: "Your Event QR Code",
-        text: `Hello ${user.names},\n\nHere is your QR code for the event.`,
-        html: `
+            await transporter.sendMail({
+                from: '"Event Booking Confirmation" <your-email@gmail.com>',
+                to: user.emails,
+                subject: "Your Event QR Code",
+                text: `Hello ${user.names},\n\nHere is your QR code for the event.`,
+                html: `
         <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -293,98 +293,103 @@ const eventBooking = async (req, res) => {
 
            `, // HTML content here
 
-        attachments: [
-          {
-            filename: `qrcode_${index}.png`,
-            path: qrCodeFilePath,
-            cid: 'qrcode'
-          },
+                attachments: [
+                    {
+                        filename: `qrcode_${index}.png`,
+                        path: qrCodeFilePath,
+                        cid: 'qrcode'
+                    },
 
-          {
-            filename: 'lubnew.png',
-            // path: '../static_img/lub.png',
-            path: './src/static_img/lubnew.png',
+                    {
+                        filename: 'lubnew.png',
+                        // path: '../static_img/lub.png',
+                        path: './src/static_img/lubnew.png',
 
-            cid: 'logo'
-          },
-          {
-            filename: 'Groupp.png',
-            // path: '../static_img/lub.png',
-            path: './src/static_img/Groupp.png',
+                        cid: 'logo'
+                    },
+                    {
+                        filename: 'Groupp.png',
+                        // path: '../static_img/lub.png',
+                        path: './src/static_img/Groupp.png',
 
-            cid: 'bcakImg'
-          },
+                        cid: 'bcakImg'
+                    },
 
-          { // fair
-            filename: 'removedbgimg.png',
-            // path: '../static_img/fair.png',
-            path: './src/static_img/removedbgimg.png',
-            cid: 'event'
-          },
-          { // make in india
-            filename: 'makeinindianew.png',
-            // path: '../static_img/makeinindia.png', 
-            path: './src/static_img/makeinindianew.png',
-            cid: 'india' // This is the unique Content-ID for the logo image
-          },
-          { // location
-            filename: 'locationnew.png',
-            // path: '../static_img/makeinindia.png', 
-            path: './src/static_img/locationnew.png',
-            cid: 'location' // This is the unique Content-ID for the logo image
-          },
-          {
-            filename: 'miraj2.png',
-            // path: '../static_img/miraj.png', 
-            path: './src/static_img/miraj2.png',
-            cid: 'sponsor1'
-          },
-          {
-            filename: 'anantanew.png',
-            // path: '../static_img/ananta.png',
-            path: './src/static_img/anantanew.png',
-            cid: 'sponsor2'
-          },
-          {
-            filename: 'iveonew.png',
-            // path: '../static_img/iveo.png',
-            path: './src/static_img/ievonew.png',
-            cid: 'sponsor3'
-          },
-          {
-            filename: 'wondernew.png',
-            // path: '../static_img/wonder.png',
-            path: './src/static_img/wondernew.png',
-            cid: 'sponsor4'
-          }
-        ],
-      });
-    });
+                    { // fair
+                        filename: 'removedbgimg.png',
+                        // path: '../static_img/fair.png',
+                        path: './src/static_img/removedbgimg.png',
+                        cid: 'event'
+                    },
+                    { // make in india
+                        filename: 'makeinindianew.png',
+                        // path: '../static_img/makeinindia.png', 
+                        path: './src/static_img/makeinindianew.png',
+                        cid: 'india' // This is the unique Content-ID for the logo image
+                    },
+                    { // location
+                        filename: 'locationnew.png',
+                        // path: '../static_img/makeinindia.png', 
+                        path: './src/static_img/locationnew.png',
+                        cid: 'location' // This is the unique Content-ID for the logo image
+                    },
+                    {
+                        filename: 'miraj2.png',
+                        // path: '../static_img/miraj.png', 
+                        path: './src/static_img/miraj2.png',
+                        cid: 'sponsor1'
+                    },
+                    {
+                        filename: 'anantanew.png',
+                        // path: '../static_img/ananta.png',
+                        path: './src/static_img/anantanew.png',
+                        cid: 'sponsor2'
+                    },
+                    {
+                        filename: 'iveonew.png',
+                        // path: '../static_img/iveo.png',
+                        path: './src/static_img/ievonew.png',
+                        cid: 'sponsor3'
+                    },
+                    {
+                        filename: 'wondernew.png',
+                        // path: '../static_img/wonder.png',
+                        path: './src/static_img/wondernew.png',
+                        cid: 'sponsor4'
+                    }
+                ],
+            });
+        });
 
-    // Wait for all email and QR code tasks to complete asynchronously
-    await Promise.all(emailPromises);
+        // Wait for all email and QR code tasks to complete asynchronously
+        await Promise.all(emailPromises);
 
-    // Saving the booking id in the table
-    console.log("Booking ID: ", savedEventBooking._id)
-    const add_booking_id = await Bookings.create({ bookingId: savedEventBooking._id, user_booking: req.user.sub, eventId: req.params.eventid })
-    if (!add_booking_id) {
-      console.log("Bookinh id not saved")
+        // Saving the booking id in the table
+        console.log("Booking ID: ", savedEventBooking._id)
+        const add_booking_id = await Bookings.create({ bookingId: savedEventBooking._id, user_booking: req.user.sub, eventId: req.params.eventid })
+        if (!add_booking_id) {
+            console.log("Bookinh id not saved")
+        }
+        console.log("Bookinh id saved.")
+        // booker id,  eventid event name descrptn Agency agecnt
+
+        // await savedEventBooking.save();
+        // res.status(200).json({ message: "Event booking successful." });
+        res.status(200).json({
+            success: true,
+            message: "Attended Created Succesfully.",
+            eventBooking: savedEventBooking,
+        });
+    } catch (err) {
+        // console.error(err);
+        res.status(500).json({ error: err.message });
     }
-    console.log("Bookinh id saved.")
-    // booker id,  eventid event name descrptn Agency agecnt
-
-    // await savedEventBooking.save();
-    // res.status(200).json({ message: "Event booking successful." });
-    res.status(200).json({
-      success: true,
-      message: "Attended Created Succesfully.",
-      eventBooking: savedEventBooking,
-    });
-  } catch (err) {
-    // console.error(err);
-    res.status(500).json({ error: err.message });
-  }
 };
+
+
+
+
+
 
 
 
