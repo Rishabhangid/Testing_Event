@@ -46,7 +46,8 @@ router.get("/get-event-type/:id", Authentication, eventTypeController.getEventTy
 router.post("/addbooking/:eventid", upload.any("pictures", 10),  eventTypeController.eventBooking);
 
 // GET: Show User Details By ID 
-router.put("/showdetails/:id/:code", eventTypeController.showUserData);
+// router.put("/showdetails/:id/:code", eventTypeController.showUserData);
+router.get("/showdetails/:code",Authentication, eventTypeController.showUserData);
 
 // PUT: Update Entry
 router.put("/updateentry/:id", eventTypeController.updateEntry);
