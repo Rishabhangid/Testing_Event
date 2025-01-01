@@ -9,6 +9,7 @@ const jwt = require("jsonwebtoken")
 const QRCode = require('qrcode');
 const fs = require('fs');
 const crypto = require('crypto');
+// const transporter = require('../utils/nodemailer');
 
 const EventBookingNews = require("../models/eventBookingSchemas");
 // const EventBookingNew = require("../models/eventBookingSchemas");
@@ -24,17 +25,22 @@ const Bookings = require("../models/bookingsSchema");
 const BookingDetails = require("../models/eventBookingSchemas");
 const Booking = require("../models/bookingsSchema");
 const { Event } = require("../models/event.model");
+const generateTicketId = require("../utils/generateTicketId");
+const createQRCode = require("../utils/createQRCode");
+const { sendMail } = require("../utils/nodemailer");
+const createDirectory = require("../utils/createDirectory");
+const sendEmail = require("../utils/sendEmail");
 
 
 
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.PASSWORD,
-  },
-});
+// const transporter = nodemailer.createTransport({
+//   service: 'gmail',
+//   auth: {
+//     user: process.env.EMAIL,
+//     pass: process.env.PASSWORD,
+//   },
+// });
 console.log("****************************", process.env.EMAIL)
 console.log("****************************", process.env.PASSWORD)
 
@@ -1046,40 +1052,463 @@ const getEventTypeByID = async (req, res) => {
 //   }
 // };
 
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // Replace with your service
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.PASSWORD,
+  },
+});
+
+// ye lsted he or working he
+// const eventBooking = async (req, res) => {
+//   try {
+//     // 6763cf93822b612f06dbd5e1
+//     // console.log("req.params.eventid", req.params.eventid)
+//     // const find_event = await Event.findById( req.params.eventid )
+//     const find_event = await Event.findById(req.params.eventid).select('start_date end_date');
+
+//     // console.log("event", find_event)
+
+
+//     const qrCodeDirectory = path.join(__dirname, '../uploads', 'qrCode');
+//     if (!fs.existsSync(qrCodeDirectory)) {
+//       // fs.mkdirSync(qrCodeDirectory, { recursive: true });
+
+//       await fs.promises.mkdir(qrCodeDirectory, { recursive: true });
+
+//     }
+
+//     const bookingDetailsArray = [];
+//     const totalMembers = req.body.users.length;
+
+//     // Generating Ticket ID
+//     function generateTicketId() {
+//       return Math.floor(10000000 + Math.random() * 90000000); // Generates a random 8-digit number
+//     }
+//     const ticketId = generateTicketId();
+
+//     // console.log("Ticket ID", ticketId);
+
+//     const newBooking = new Booking({
+//       event_id: req.params.eventid,
+//       // event_from_date: new Date(),
+//       event_from_date: find_event.start_date,
+//       // event_to_date: new Date(),
+//       event_to_date: find_event.end_date,
+//       ticket_id: ticketId,
+//       ticket_price: 0,
+//       no_of_members: totalMembers,
+//       booked_by: "6770c8deba668872f67b794a",
+//       booked_at: new Date(),
+//       created_at: new Date(),
+//       updated_at: new Date(),
+//     });
+
+//     const savedBooking = await newBooking.save();
+
+//     // const transporter = nodemailer.createTransport({
+//     //   service: 'gmail', // Replace with your service
+//     //   auth: {
+//     //     user: process.env.EMAIL,
+//     //     pass: process.env.PASSWORD,
+//     //   },
+//     // });
+
+//     const emailPromises = req.body.users.map(async (user, i) => {
+//       const pictureFile = req.files ? req.files.find(file => file.fieldname === `users[${i}][pictures]`) : null;
+
+//       const customer_picture = pictureFile ? pictureFile.filename : "";
+//       const customer_name = user.names;
+//       const customer_email = user.emails;
+
+//       const uniqueCode = `${new Date().getTime()}${Math.floor(10 + Math.random() * 90)}`;
+//       const qrCodeFilePath = path.join(qrCodeDirectory, `qrcode_${uniqueCode}.png`);
+
+//       await QRCode.toFile(qrCodeFilePath, uniqueCode, {
+//         color: { dark: "#000000", light: '#fbf1e8' },
+//         width: 300,
+//       });
+
+//       const newBookingDetails = new BookingDetails({
+//         customer_picture,
+//         customer_name,
+//         customer_phone: user.mobile_numbers,
+//         customer_email,
+//         customer_city: user.cities,
+//         customer_organisation: user.organization_names,
+//         customer_qr_picture: `qrcode_${uniqueCode}.png`,
+//         customer_qr_code: uniqueCode,
+//         booking_id: savedBooking._id,
+//       });
+
+//       const savedBookingDetails = await newBookingDetails.save();
+//       bookingDetailsArray.push(savedBookingDetails);
+
+//       const mailOptions = {
+//         from: `"Your Ticket is Successfully Generated - Ready to Go!" <${process.env.EMAIL}>`,
+//         to: customer_email,
+//         subject: "Event Ticket",
+//         html: `
+//         <!DOCTYPE html>
+//     <html lang="en">
+//     <head>
+//       <meta charset="UTF-8">
+//       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//       <title>India Industrial Fair</title>
+//        <style>
+//     body {
+//       margin: 0;
+//       font-family: Arial, sans-serif;
+//       background-color: #f7f7f7;
+//       color: #333;
+//     }
+//     .container {
+//       max-width: 600px;
+//       margin: 0 auto;
+//       background: #FBF1E8;
+//       border-radius: 10px;
+//       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+//       overflow: hidden;
+//       background-image: url('cid:bcakImg');
+//       background-position: center;
+//       background-size: cover;
+//     }
+//     .header, .footer {
+//       text-align: center;
+//       padding: 20px;
+
+//     }
+//     .header img {
+//       max-width: 80px;
+//       height: auto;
+//     }
+//     .title {
+//       font-size: 1.5rem;
+//       margin: 10px 0;
+//       font-weight: bold;
+//     }
+//     .date-location {
+//       color: #E5552E;
+//       font-size: 1.25rem;
+//       font-weight: bold;
+//       margin: 10px 0;
+//     }
+//     .visitors-section {
+//       text-align: center;
+//       border: 2px solid #000;
+//       padding: 15px;
+//       margin: 15px;
+//       border-radius: 10px;
+//     }
+//     .visitors-section img {
+//       max-width: 150px;
+//       margin: 10px 0;
+//     }
+//     .username {
+//       font-size: 1.25rem;
+//       color: #000;
+//       font-weight: bold;
+//     }
+//     .footer img {
+//       max-width: 100px;
+//       margin: 10px;
+//     }
+//     @media (max-width: 768px) {
+//       .container {
+//         width: 90%;
+//       }
+//       .title {
+//         font-size: 1.25rem;
+//       }
+//       .date-location {
+//         font-size: 1rem;
+//       }
+//       .visitors-section {
+//         font-size: 1rem;
+//       }
+//     }
+//     @media (max-width: 480px) {
+//       .header img, .footer img {
+//         max-width: 50px;
+//       }
+//       .title {
+//         font-size: 1rem;
+//       }
+//       .date-location {
+//         font-size: 0.875rem;
+//       }
+//       .visitors-section {
+//         font-size: 0.875rem;
+//       }
+//     }
+//   </style>
+
+//     </head>
+//     <body>
+//         <div class="header">
+//             <p> Your Ticket is Successfully Generated! </p>
+//         </div>
+//         <div class="body">
+//             <p>Hi ${user.names},</p>
+//             <p>We’re excited to inform you that your ticket has been successfully generated!</p>
+//             <p>Here are the details of your ticket:</p>
+//             <p>Ticket Code : ${uniqueCode}</p>
+//         </div> 
+
+
+//   <div class="container" style="max-width: 600px; background-image: url('https://drive.google.com/uc?id=1-M3cLGhhJ78HcSXfCmdH4Aak3gyGCcov');
+//  background-position: center; background-size: center; border-radius: 10px; margin: auto; padding: 20px; box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); font-family: Arial, sans-serif;">
+//   <div class="header" style="text-align: center;">
+//     <img src="https://drive.google.com/uc?id=1UNLJL-0nVPBcz5cURnx2EgeyJFXwdt8l" style="width: 60px; height: auto; margin-bottom: 10px;" alt="Logo">
+//     <img src="https://drive.google.com/uc?id=18mL0Ew2mq3jytR8ETPodyInBRlO4oX3e" style="width: 220px; height: auto; margin-bottom: 10px;" alt="Event Logo">
+//     <img src="https://drive.google.com/uc?id=1HTFMYcBRbLoodWHD87litVfjTexBYjA2" style="width: 120px; height: auto; margin-bottom: 10px;" alt="Make in India">
+//     <div class="title" style="font-size: 22px; color: #000000; font-weight: 700; margin: 10px 0;">11TH <span style="color: #E5552E;">INDIA INDUSTRIAL FAIR 2025</span></div>
+//     <div class="date-location" style="color: #d9534f; font-size: 22px; font-weight: 900; margin: 15px 0;">10-13 JANUARY</div>
+//     <div class="date-location2" style="text-align: center; color: #d9534f; font-size: 22px; font-weight: 900; margin: 15px 0;">
+//       <table style="width: 100%; table-layout: fixed;">
+//         <tr>
+//           <td style="padding: 0;">
+//             <img src="https://drive.google.com/uc?id=1YNljTg6BUxpkYSuifIT40SVGJhCnge2V" style="width: 30px; height: auto; vertical-align: middle;" alt="Location">
+//             <span style="vertical-align: middle;">DPS GROUND, BHUWANA, UDAIPUR</span>
+//           </td>
+//         </tr>
+//       </table>
+//     </div>
+//   </div>
+
+//   <div class="visitors-section" style="border: 3px solid #000; border-radius: 10px; background-color: #FBF1E8; padding: 15px; text-align: center; font-weight: bold; font-size: 20px; margin: 15px auto; max-width: 70%;">
+//     <div class="heading" style="font-size: 24px; font-weight: 900; color: #000000;">VISITORS</div>
+//     <img src="cid:qrcode" style="margin-top: 10px;" alt="QR Code">
+//     <div class="username" style="font-size: 18px; font-weight: 900; color: #000000; margin-top: 10px;">${user.names}</div>
+//   </div>
+
+//  <div class="footer" style="text-align: center; margin-top: 20px;">
+//   <div class="title" style="font-size: 22px; color: #000000; font-weight: 700;">OUR SPONSOR</div>
+//   <table align="center" style="width: 100%; margin-top: 20px; table-layout: fixed; border-collapse: collapse;">
+//     <tr>
+//       <td align="center" style="padding: 5px; width: 25%;">
+//         <img src="https://drive.google.com/uc?id=1kWVaYw0ojamvyzvmdUGDRQ5MeZHKGS7R" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 1">
+//       </td>
+//       <td align="center" style="padding: 5px; width: 25%;">
+//         <img src="https://drive.google.com/uc?id=1ehN4JFPfkyEhoVB9zoY7jVW4hxrHOs_U" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 2">
+//       </td>
+//       <td align="center" style="padding: 5px; width: 25%;">
+//         <img src="https://drive.google.com/uc?id=1Sg4RAbXXztikhIXqefNr4TY5OEDanX5K" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 3">
+//       </td>
+//       <td align="center" style="padding: 5px; width: 25%;">
+//         <img src="https://drive.google.com/uc?id=1uyNOUzrl6V-WF0CwpJlxMJJ0Ao6Lyc7p" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 4">
+//       </td>
+//     </tr>
+//   </table>
+// </div>
+
+// </div>
+
+
+//     </body>
+//     </html>
+//         `, // Your email HTML content
+//         attachments: [
+//           {
+//             filename: `qrcode_${uniqueCode}.png`,
+//             path: qrCodeFilePath,
+//             cid: 'qrcode',
+//           },
+//         ],
+//       };
+
+//       return transporter.sendMail(mailOptions);
+//       // await Promise.all(req.body.users.map(user => transporter.sendMail(mailOptions)));
+//     });
+
+//     await Promise.all(emailPromises);
+
+//     res.status(200).json({
+//       message: "Booking successful, emails sent!",
+//       booking: savedBooking,
+//       details: bookingDetailsArray,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// };
+
+
+function generateTicketHTML(user, uniqueCode) {
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>India Industrial Fair</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    color: #333;
+  }
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #FBF1E8;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    background-image: url('cid:bcakImg');
+    background-position: center;
+    background-size: cover;
+  }
+  .header, .footer {
+    text-align: center;
+    padding: 20px;
+  }
+  .header img {
+    max-width: 80px;
+    height: auto;
+  }
+  .title {
+    font-size: 1.5rem;
+    margin: 10px 0;
+    font-weight: bold;
+  }
+  .date-location {
+    color: #E5552E;
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin: 10px 0;
+  }
+  .visitors-section {
+    text-align: center;
+    border: 2px solid #000;
+    padding: 15px;
+    margin: 15px;
+    border-radius: 10px;
+  }
+  .visitors-section img {
+    max-width: 150px;
+    margin: 10px 0;
+  }
+  .username {
+    font-size: 1.25rem;
+    color: #000;
+    font-weight: bold;
+  }
+  .footer img {
+    max-width: 100px;
+    margin: 10px;
+  }
+  @media (max-width: 768px) {
+    .container {
+      width: 90%;
+    }
+    .title {
+      font-size: 1.25rem;
+    }
+    .date-location {
+      font-size: 1rem;
+    }
+    .visitors-section {
+      font-size: 1rem;
+    }
+  }
+  @media (max-width: 480px) {
+    .header img, .footer img {
+      max-width: 50px;
+    }
+    .title {
+      font-size: 1rem;
+    }
+    .date-location {
+      font-size: 0.875rem;
+    }
+    .visitors-section {
+      font-size: 0.875rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+      <p>Your Ticket is Successfully Generated!</p>
+  </div>
+  <div class="body">
+      <p>Hi ${user.names},</p>
+      <p>We’re excited to inform you that your ticket has been successfully generated!</p>
+      <p>Here are the details of your ticket:</p>
+      <p>Ticket Code : ${uniqueCode}</p>
+  </div>
+
+  <div class="container" style="max-width: 600px; background-image: url('https://drive.google.com/uc?id=1-M3cLGhhJ78HcSXfCmdH4Aak3gyGCcov');
+  background-position: center; background-size: center; border-radius: 10px; margin: auto; padding: 20px; box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); font-family: Arial, sans-serif;">
+  <div class="header" style="text-align: center;">
+      <img src="https://drive.google.com/uc?id=1UNLJL-0nVPBcz5cURnx2EgeyJFXwdt8l" style="width: 60px; height: auto; margin-bottom: 10px;" alt="Logo">
+      <img src="https://drive.google.com/uc?id=18mL0Ew2mq3jytR8ETPodyInBRlO4oX3e" style="width: 220px; height: auto; margin-bottom: 10px;" alt="Event Logo">
+      <img src="https://drive.google.com/uc?id=1HTFMYcBRbLoodWHD87litVfjTexBYjA2" style="width: 120px; height: auto; margin-bottom: 10px;" alt="Make in India">
+      <div class="title" style="font-size: 22px; color: #000000; font-weight: 700; margin: 10px 0;">11TH <span style="color: #E5552E;">INDIA INDUSTRIAL FAIR 2025</span></div>
+      <div class="date-location" style="color: #d9534f; font-size: 22px; font-weight: 900; margin: 15px 0;">10-13 JANUARY</div>
+      <div class="date-location2" style="text-align: center; color: #d9534f; font-size: 22px; font-weight: 900; margin: 15px 0;">
+          <table style="width: 100%; table-layout: fixed;">
+              <tr>
+                  <td style="padding: 0;">
+                      <img src="https://drive.google.com/uc?id=1YNljTg6BUxpkYSuifIT40SVGJhCnge2V" style="width: 30px; height: auto; vertical-align: middle;" alt="Location">
+                      <span style="vertical-align: middle;">DPS GROUND, BHUWANA, UDAIPUR</span>
+                  </td>
+              </tr>
+          </table>
+      </div>
+  </div>
+
+  <div class="visitors-section" style="border: 3px solid #000; border-radius: 10px; background-color: #FBF1E8; padding: 15px; text-align: center; font-weight: bold; font-size: 20px; margin: 15px auto; max-width: 70%;">
+      <div class="heading" style="font-size: 24px; font-weight: 900; color: #000000;">VISITORS</div>
+      <img src="cid:qrcode" style="margin-top: 10px;" alt="QR Code">
+      <div class="username" style="font-size: 18px; font-weight: 900; color: #000000; margin-top: 10px;">${user.names}</div>
+  </div>
+
+  <div class="footer" style="text-align: center; margin-top: 20px;">
+      <div class="title" style="font-size: 22px; color: #000000; font-weight: 700;">OUR SPONSOR</div>
+      <table align="center" style="width: 100%; margin-top: 20px; table-layout: fixed; border-collapse: collapse;">
+          <tr>
+              <td align="center" style="padding: 5px; width: 25%;">
+                  <img src="https://drive.google.com/uc?id=1kWVaYw0ojamvyzvmdUGDRQ5MeZHKGS7R" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 1">
+              </td>
+              <td align="center" style="padding: 5px; width: 25%;">
+                  <img src="https://drive.google.com/uc?id=1ehN4JFPfkyEhoVB9zoY7jVW4hxrHOs_U" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 2">
+              </td>
+              <td align="center" style="padding: 5px; width: 25%;">
+                  <img src="https://drive.google.com/uc?id=1Sg4RAbXXztikhIXqefNr4TY5OEDanX5K" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 3">
+              </td>
+              <td align="center" style="padding: 5px; width: 25%;">
+                  <img src="https://drive.google.com/uc?id=1uyNOUzrl6V-WF0CwpJlxMJJ0Ao6Lyc7p" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 4">
+              </td>
+          </tr>
+      </table>
+  </div>
+
+</div>
+
+</body>
+</html>
+  `;
+}
 const eventBooking = async (req, res) => {
   try {
-    // 6763cf93822b612f06dbd5e1
-    // console.log("req.params.eventid", req.params.eventid)
-    // const find_event = await Event.findById( req.params.eventid )
     const find_event = await Event.findById(req.params.eventid).select('start_date end_date');
 
-    // console.log("event", find_event)
-
-
     const qrCodeDirectory = path.join(__dirname, '../uploads', 'qrCode');
-    if (!fs.existsSync(qrCodeDirectory)) {
-      // fs.mkdirSync(qrCodeDirectory, { recursive: true });
-
-      await fs.promises.mkdir(qrCodeDirectory, { recursive: true });
-
-    }
+    console.log("dir", qrCodeDirectory)
+    await createDirectory(qrCodeDirectory);
 
     const bookingDetailsArray = [];
     const totalMembers = req.body.users.length;
 
-    // Generating Ticket ID
-    function generateTicketId() {
-      return Math.floor(10000000 + Math.random() * 90000000); // Generates a random 8-digit number
-    }
     const ticketId = generateTicketId();
-
-    // console.log("Ticket ID", ticketId);
-
     const newBooking = new Booking({
       event_id: req.params.eventid,
-      // event_from_date: new Date(),
       event_from_date: find_event.start_date,
-      // event_to_date: new Date(),
       event_to_date: find_event.end_date,
       ticket_id: ticketId,
       ticket_price: 0,
@@ -1092,28 +1521,23 @@ const eventBooking = async (req, res) => {
 
     const savedBooking = await newBooking.save();
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail', // Replace with your service
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD,
-      },
-    });
+
 
     const emailPromises = req.body.users.map(async (user, i) => {
+      // Extracting user details
       const pictureFile = req.files ? req.files.find(file => file.fieldname === `users[${i}][pictures]`) : null;
-
       const customer_picture = pictureFile ? pictureFile.filename : "";
       const customer_name = user.names;
       const customer_email = user.emails;
 
+      // Generate unique code
       const uniqueCode = `${new Date().getTime()}${Math.floor(10 + Math.random() * 90)}`;
-      const qrCodeFilePath = path.join(qrCodeDirectory, `qrcode_${uniqueCode}.png`);
 
-      await QRCode.toFile(qrCodeFilePath, uniqueCode, {
-        color: { dark: "#000000", light: '#fbf1e8' },
-        width: 300,
-      });
+      // Create QR code in parallel
+      const qrCodePromise = createQRCode(uniqueCode, qrCodeDirectory).then(qrCodeFilePath => ({
+        qrCodeFilePath,
+        uniqueCode
+      }));
 
       const newBookingDetails = new BookingDetails({
         customer_picture,
@@ -1130,169 +1554,15 @@ const eventBooking = async (req, res) => {
       const savedBookingDetails = await newBookingDetails.save();
       bookingDetailsArray.push(savedBookingDetails);
 
+      // Wait for QR code generation
+      const { qrCodeFilePath } = await qrCodePromise;
+
+      // Prepare the mail options
       const mailOptions = {
         from: `"Your Ticket is Successfully Generated - Ready to Go!" <${process.env.EMAIL}>`,
         to: customer_email,
         subject: "Event Ticket",
-        html: `
-        <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>India Industrial Fair</title>
-       <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f7f7f7;
-      color: #333;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background: #FBF1E8;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      background-image: url('cid:bcakImg');
-      background-position: center;
-      background-size: cover;
-    }
-    .header, .footer {
-      text-align: center;
-      padding: 20px;
-
-    }
-    .header img {
-      max-width: 80px;
-      height: auto;
-    }
-    .title {
-      font-size: 1.5rem;
-      margin: 10px 0;
-      font-weight: bold;
-    }
-    .date-location {
-      color: #E5552E;
-      font-size: 1.25rem;
-      font-weight: bold;
-      margin: 10px 0;
-    }
-    .visitors-section {
-      text-align: center;
-      border: 2px solid #000;
-      padding: 15px;
-      margin: 15px;
-      border-radius: 10px;
-    }
-    .visitors-section img {
-      max-width: 150px;
-      margin: 10px 0;
-    }
-    .username {
-      font-size: 1.25rem;
-      color: #000;
-      font-weight: bold;
-    }
-    .footer img {
-      max-width: 100px;
-      margin: 10px;
-    }
-    @media (max-width: 768px) {
-      .container {
-        width: 90%;
-      }
-      .title {
-        font-size: 1.25rem;
-      }
-      .date-location {
-        font-size: 1rem;
-      }
-      .visitors-section {
-        font-size: 1rem;
-      }
-    }
-    @media (max-width: 480px) {
-      .header img, .footer img {
-        max-width: 50px;
-      }
-      .title {
-        font-size: 1rem;
-      }
-      .date-location {
-        font-size: 0.875rem;
-      }
-      .visitors-section {
-        font-size: 0.875rem;
-      }
-    }
-  </style>
-
-    </head>
-    <body>
-        <div class="header">
-            <p> Your Ticket is Successfully Generated! </p>
-        </div>
-        <div class="body">
-            <p>Hi ${user.names},</p>
-            <p>We’re excited to inform you that your ticket has been successfully generated!</p>
-            <p>Here are the details of your ticket:</p>
-        </div> 
-
-
-  <div class="container" style="max-width: 600px; background-image: url('https://drive.google.com/uc?id=1-M3cLGhhJ78HcSXfCmdH4Aak3gyGCcov');
- background-position: center; background-size: center; border-radius: 10px; margin: auto; padding: 20px; box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); font-family: Arial, sans-serif;">
-  <div class="header" style="text-align: center;">
-    <img src="https://drive.google.com/uc?id=1UNLJL-0nVPBcz5cURnx2EgeyJFXwdt8l" style="width: 60px; height: auto; margin-bottom: 10px;" alt="Logo">
-    <img src="https://drive.google.com/uc?id=18mL0Ew2mq3jytR8ETPodyInBRlO4oX3e" style="width: 220px; height: auto; margin-bottom: 10px;" alt="Event Logo">
-    <img src="https://drive.google.com/uc?id=1HTFMYcBRbLoodWHD87litVfjTexBYjA2" style="width: 120px; height: auto; margin-bottom: 10px;" alt="Make in India">
-    <div class="title" style="font-size: 22px; color: #000000; font-weight: 700; margin: 10px 0;">11TH <span style="color: #E5552E;">INDIA INDUSTRIAL FAIR 2025</span></div>
-    <div class="date-location" style="color: #d9534f; font-size: 22px; font-weight: 900; margin: 15px 0;">10-13 JANUARY</div>
-    <div class="date-location2" style="text-align: center; color: #d9534f; font-size: 22px; font-weight: 900; margin: 15px 0;">
-      <table style="width: 100%; table-layout: fixed;">
-        <tr>
-          <td style="padding: 0;">
-            <img src="https://drive.google.com/uc?id=1YNljTg6BUxpkYSuifIT40SVGJhCnge2V" style="width: 30px; height: auto; vertical-align: middle;" alt="Location">
-            <span style="vertical-align: middle;">DPS GROUND, BHUWANA, UDAIPUR</span>
-          </td>
-        </tr>
-      </table>
-    </div>
-  </div>
-
-  <div class="visitors-section" style="border: 3px solid #000; border-radius: 10px; background-color: #FBF1E8; padding: 15px; text-align: center; font-weight: bold; font-size: 20px; margin: 15px auto; max-width: 70%;">
-    <div class="heading" style="font-size: 24px; font-weight: 900; color: #000000;">VISITORS</div>
-    <img src="cid:qrcode" style="margin-top: 10px;" alt="QR Code">
-    <div class="username" style="font-size: 18px; font-weight: 900; color: #000000; margin-top: 10px;">${user.names}</div>
-  </div>
-
- <div class="footer" style="text-align: center; margin-top: 20px;">
-  <div class="title" style="font-size: 22px; color: #000000; font-weight: 700;">OUR SPONSOR</div>
-  <table align="center" style="width: 100%; margin-top: 20px; table-layout: fixed; border-collapse: collapse;">
-    <tr>
-      <td align="center" style="padding: 5px; width: 25%;">
-        <img src="https://drive.google.com/uc?id=1kWVaYw0ojamvyzvmdUGDRQ5MeZHKGS7R" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 1">
-      </td>
-      <td align="center" style="padding: 5px; width: 25%;">
-        <img src="https://drive.google.com/uc?id=1ehN4JFPfkyEhoVB9zoY7jVW4hxrHOs_U" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 2">
-      </td>
-      <td align="center" style="padding: 5px; width: 25%;">
-        <img src="https://drive.google.com/uc?id=1Sg4RAbXXztikhIXqefNr4TY5OEDanX5K" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 3">
-      </td>
-      <td align="center" style="padding: 5px; width: 25%;">
-        <img src="https://drive.google.com/uc?id=1uyNOUzrl6V-WF0CwpJlxMJJ0Ao6Lyc7p" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 4">
-      </td>
-    </tr>
-  </table>
-</div>
-
-</div>
-
-
-    </body>
-    </html>
-        `, // Your email HTML content
+        html: generateTicketHTML(user, uniqueCode),
         attachments: [
           {
             filename: `qrcode_${uniqueCode}.png`,
@@ -1301,8 +1571,9 @@ const eventBooking = async (req, res) => {
           },
         ],
       };
-
-      return transporter.sendMail(mailOptions);
+      // console.time("sendEmail");
+      return sendEmail(mailOptions);
+      // console.timeEnd("sendEmail");
     });
 
     await Promise.all(emailPromises);
@@ -1320,57 +1591,112 @@ const eventBooking = async (req, res) => {
 
 
 
+// const showUserDatas = async (req, res) => {
+//   try {
+//     // getting user id from token
+//     const user_id = req.user.sub
+//     console.log("user id from auth", user_id) //
+//     console.log("*******", req.params.code)
 
+//     return res.status(200).json({ success: true, message: "User Details found" });
+
+
+
+
+//     // Finding the User Booking Details : 
+//     // const eventBooking = await EventBookingNews.findOne({ "customer_qr_code": req.params.id });
+//     const eventBooking = await BookingDetails.findOne({ customer_qr_code: req.params.code });
+//     console.log(eventBooking, "---------------eventBooking---------------");
+
+//     // If No Data Found
+//     if (!eventBooking) {
+//       return res.status(404).json({ message: "Event booking not found" });
+//     }
+
+//     console.log(eventBooking.booking_id, "---------------eventBooking.booking_id---------------");
+//     const check_data = await Booking.findById({ _id: eventBooking.booking_id })
+//     // const check_data = await Booking.findOne({ _id: new ObjectId(eventBooking.booking_id) });
+
+//     // console.log("cehck data", check_data)
+//     console.log("cehck dsaat", check_data.event_from_date,event_from_date.event_to_date)
+
+//     // const currentTime = new Date();
+//     const currentTime = new Date('2024-12-27T12:00:00.000Z');
+//     const event_from_date = new Date('2024-12-25T15:00:00.000Z');
+//     const event_to_date = new Date('2024-12-31T28:00:00.000Z');
+//     if (currentTime < event_from_date || currentTime > event_to_date) {
+//       return res.status(400).json({ success: false, message: "Event has expired or not started yet" });
+//     }
+
+//     if (eventBooking.customer_qr_code.toString() !== req.params.code.toString()) {
+//       // if (eventBooking.customer_qr_code !== req.params.code) {
+//       // console.log("gggggg")
+//       return res.status(400).json({ success: true, message: "QR Code not matched, not valid" })
+//     }
+
+//     // success message
+//     return res.status(200).json({ success: true, message: "User details found", eventBooking });
+//   } catch (error) {
+//     // console.error(error);
+//     return res.status(500).json({ message: "Error fetching user details", error });
+//   }
+
+// }
 const showUserData = async (req, res) => {
   try {
     // getting user id from token
-    const user_id = req.user.sub
-    console.log("user id from auth", user_id) //
-    console.log("*******", req.params.code)
+    const user_id = req.user.sub;
+    console.log("User ID from auth:", user_id);
+    console.log("QR Code from params:", req.params.code);
 
-    return res.status(200).json({ success: true, message: "User Details found" });
+    // Step 1: Finding the User Booking Details
+    const eventBooking = await BookingDetails.findOne({ customer_qr_code: req.params.code });
+    console.log("Event Booking details:", eventBooking);
 
+    // If no data found for event booking
+    if (!eventBooking) {
+      return res.status(404).json({ message: "Event booking not found" });
+    }
 
+    // Step 2: Fetching the related Booking details using booking_id from eventBooking
+    const check_data = await Booking.findById(eventBooking.booking_id);
+    console.log("Booking details:", check_data);
 
-
-    // // Finding the User Booking Details : 
-    // // const eventBooking = await EventBookingNews.findOne({ "customer_qr_code": req.params.id });
-    // const eventBooking = await BookingDetails.findOne({ customer_qr_code: req.params.code });
-    // console.log(eventBooking, "---------------eventBooking---------------");
-
-    // // If No Data Found
-    // if (!eventBooking) {
-    //   return res.status(404).json({ message: "Event booking not found" });
-    // }
-
-    // console.log(eventBooking.booking_id, "---------------eventBooking.booking_id---------------");
-    // const check_data = await Booking.findById({ _id: eventBooking.booking_id })
-    // // const check_data = await Booking.findOne({ _id: new ObjectId(eventBooking.booking_id) });
-
-    // // console.log("cehck data", check_data)
-    // console.log("cehck dsaat", check_data.event_from_date,event_from_date.event_to_date)
-
-    // // const currentTime = new Date();
-    // const currentTime = new Date('2024-12-27T12:00:00.000Z');
+    // Step 3: Validating event dates
+    const currentTime = new Date(); // Replace with dynamic current time
+    // const currentTime = new Date('2025-03-27T12:00:00.000Z');
     // const event_from_date = new Date('2024-12-25T15:00:00.000Z');
+    const event_from_date = check_data.event_from_date;
     // const event_to_date = new Date('2024-12-31T28:00:00.000Z');
-    // if (currentTime < event_from_date || currentTime > event_to_date) {
-    //   return res.status(400).json({ success: false, message: "Event has expired or not started yet" });
-    // }
+    const event_to_date = check_data.event_to_date;
+    
+    if (currentTime < event_from_date || currentTime > event_to_date) {
+      return res.status(400).json({ success: false, message: "Event has expired or not started yet" });
+    }
 
-    // if (eventBooking.customer_qr_code.toString() !== req.params.code.toString()) {
-    //   // if (eventBooking.customer_qr_code !== req.params.code) {
-    //   // console.log("gggggg")
-    //   return res.status(400).json({ success: true, message: "QR Code not matched, not valid" })
-    // }
+    // Step 4: Validating the QR code
+    if (eventBooking.customer_qr_code.toString() !== req.params.code.toString()) {
+      return res.status(400).json({ success: false, message: "QR Code does not match, not valid" });
+    }
 
-    // // success message
+    if(eventBooking.is_cancelled === false){
+      eventBooking.is_cancelled = true
+      await eventBooking.save()
+      return res.status(200).json({ success: true, message: "User found, Entry Allowed", eventBooking });
+    }
+    else{
+    return res.status(400).json({ success: false, message: "User Already Present", eventBooking });
+    }
+
+
+
+    // Step 5: Returning the success response with event booking details
     // return res.status(200).json({ success: true, message: "User details found", eventBooking });
+
   } catch (error) {
-    // console.error(error);
+    console.error("Error fetching user details:", error);
     return res.status(500).json({ message: "Error fetching user details", error });
   }
-
 }
 
 // Update User Entry To True ( When user enter the event )
