@@ -1336,170 +1336,193 @@ const transporter = nodemailer.createTransport({
 // };
 
 
-function generateTicketHTML(user, uniqueCode) {
+function generateTicketHTML(user, uniqueCode, qrCodeFilePath) {
   return `
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>India Industrial Fair</title>
-<style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #f7f7f7;
-    color: #333;
-  }
-  .container {
-    max-width: 600px;
-    margin: 0 auto;
-    background: #FBF1E8;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    background-image: url('cid:bcakImg');
-    background-position: center;
-    background-size: cover;
-  }
-  .header, .footer {
-    text-align: center;
-    padding: 20px;
-  }
-  .header img {
-    max-width: 80px;
-    height: auto;
-  }
-  .title {
-    font-size: 1.5rem;
-    margin: 10px 0;
-    font-weight: bold;
-  }
-  .date-location {
-    color: #E5552E;
-    font-size: 1.25rem;
-    font-weight: bold;
-    margin: 10px 0;
-  }
-  .visitors-section {
-    text-align: center;
-    border: 2px solid #000;
-    padding: 15px;
-    margin: 15px;
-    border-radius: 10px;
-  }
-  .visitors-section img {
-    max-width: 150px;
-    margin: 10px 0;
-  }
-  .username {
-    font-size: 1.25rem;
-    color: #000;
-    font-weight: bold;
-  }
-  .footer img {
-    max-width: 100px;
-    margin: 10px;
-  }
-  @media (max-width: 768px) {
-    .container {
-      width: 90%;
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
     }
-    .title {
-      font-size: 1.25rem;
+
+    .ticket {
+      max-width: 800px;
+      margin: 20px auto;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      display: flex;
+      overflow: hidden;
     }
-    .date-location {
-      font-size: 1rem;
+
+    .ticket-left {
+      flex: 3;
+      padding: 20px;
+      background-color: #FFE5D2;
+      border-right: 1px dashed #ddd;
     }
-    .visitors-section {
-      font-size: 1rem;
+
+    .ticket-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
     }
-  }
-  @media (max-width: 480px) {
-    .header img, .footer img {
-      max-width: 50px;
+
+    .ticket-header img {
+      height: 50px;
+      width: auto;
     }
-    .title {
-      font-size: 1rem;
+
+    .event-title h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #333;
     }
-    .date-location {
-      font-size: 0.875rem;
+
+    .event-description {
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: #555;
     }
-    .visitors-section {
-      font-size: 0.875rem;
+
+    .event-timing {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-weight: bold;
     }
-  }
-</style>
+
+    .event-location {
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: #555;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .col-6 {
+      flex: 1;
+      padding-right: 10px;
+    }
+
+    .col-6 p {
+      margin: 5px 0;
+      color: #555;
+    }
+
+    .ticket-right {
+      flex: 1;
+      padding: 20px;
+      text-align: center;
+      background-color: #fafafa;
+    }
+
+    .admit-one {
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .qr-code {
+      margin-bottom: 20px;
+    }
+
+    .qr-code img {
+      width: 150px;
+      height: 150px;
+    }
+
+    .ticket-code {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .download-btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #ff5722;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+
+  </style>
 </head>
 <body>
-  <div class="header">
-      <p>Your Ticket is Successfully Generated!</p>
-  </div>
-  <div class="body">
-      <p>Hi ${user.names},</p>
-      <p>We’re excited to inform you that your ticket has been successfully generated!</p>
-      <p>Here are the details of your ticket:</p>
-      <p>Ticket Code : ${uniqueCode}</p>
-  </div>
+  <div class="ticket">
 
-  <div class="container" style="max-width: 600px; background-image: url('https://drive.google.com/uc?id=1-M3cLGhhJ78HcSXfCmdH4Aak3gyGCcov');
-  background-position: center; background-size: center; border-radius: 10px; margin: auto; padding: 20px; box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); font-family: Arial, sans-serif;">
-  <div class="header" style="text-align: center;">
-      <img src="https://drive.google.com/uc?id=1UNLJL-0nVPBcz5cURnx2EgeyJFXwdt8l" style="width: 60px; height: auto; margin-bottom: 10px;" alt="Logo">
-      <img src="https://drive.google.com/uc?id=18mL0Ew2mq3jytR8ETPodyInBRlO4oX3e" style="width: 220px; height: auto; margin-bottom: 10px;" alt="Event Logo">
-      <img src="https://drive.google.com/uc?id=1HTFMYcBRbLoodWHD87litVfjTexBYjA2" style="width: 120px; height: auto; margin-bottom: 10px;" alt="Make in India">
-      <div class="title" style="font-size: 22px; color: #000000; font-weight: 700; margin: 10px 0;">11TH <span style="color: #E5552E;">INDIA INDUSTRIAL FAIR 2025</span></div>
-      <div class="date-location" style="color: #d9534f; font-size: 22px; font-weight: 900; margin: 15px 0;">10-13 JANUARY</div>
-      <div class="date-location2" style="text-align: center; color: #d9534f; font-size: 22px; font-weight: 900; margin: 15px 0;">
-          <table style="width: 100%; table-layout: fixed;">
-              <tr>
-                  <td style="padding: 0;">
-                      <img src="https://drive.google.com/uc?id=1YNljTg6BUxpkYSuifIT40SVGJhCnge2V" style="width: 30px; height: auto; vertical-align: middle;" alt="Location">
-                      <span style="vertical-align: middle;">DPS GROUND, BHUWANA, UDAIPUR</span>
-                  </td>
-              </tr>
-          </table>
-      </div>
+    <div class="ticket-left">
+     <div class="ticket-header" style="width: 100%; margin-bottom: 20px; text-align: center;">
+  <div style="display: inline-block; width: 32%; padding: 0 10px;">
+    <img src="https://drive.google.com/uc?id=1UNLJL-0nVPBcz5cURnx2EgeyJFXwdt8l" alt="Logo 1" >
   </div>
-
-  <div class="visitors-section" style="border: 3px solid #000; border-radius: 10px; background-color: #FBF1E8; padding: 15px; text-align: center; font-weight: bold; font-size: 20px; margin: 15px auto; max-width: 70%;">
-      <div class="heading" style="font-size: 24px; font-weight: 900; color: #000000;">VISITORS</div>
-      <img src="cid:qrcode" style="margin-top: 10px;" alt="QR Code">
-      <div class="username" style="font-size: 18px; font-weight: 900; color: #000000; margin-top: 10px;">${user.names}</div>
+  <div style="display: inline-block; width: 32%; padding: 0 10px;">
+    <img src="https://drive.google.com/uc?id=18mL0Ew2mq3jytR8ETPodyInBRlO4oX3e" alt="Logo 2" >
   </div>
-
-  <div class="footer" style="text-align: center; margin-top: 20px;">
-      <div class="title" style="font-size: 22px; color: #000000; font-weight: 700;">OUR SPONSOR</div>
-      <table align="center" style="width: 100%; margin-top: 20px; table-layout: fixed; border-collapse: collapse;">
-          <tr>
-              <td align="center" style="padding: 5px; width: 25%;">
-                  <img src="https://drive.google.com/uc?id=1kWVaYw0ojamvyzvmdUGDRQ5MeZHKGS7R" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 1">
-              </td>
-              <td align="center" style="padding: 5px; width: 25%;">
-                  <img src="https://drive.google.com/uc?id=1ehN4JFPfkyEhoVB9zoY7jVW4hxrHOs_U" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 2">
-              </td>
-              <td align="center" style="padding: 5px; width: 25%;">
-                  <img src="https://drive.google.com/uc?id=1Sg4RAbXXztikhIXqefNr4TY5OEDanX5K" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 3">
-              </td>
-              <td align="center" style="padding: 5px; width: 25%;">
-                  <img src="https://drive.google.com/uc?id=1uyNOUzrl6V-WF0CwpJlxMJJ0Ao6Lyc7p" style="max-width: 100px; width: 80%; height: auto;" alt="Sponsor 4">
-              </td>
-          </tr>
-      </table>
+  <div style="display: inline-block; width: 32%; padding: 0 10px;">
+    <img src="https://drive.google.com/uc?id=1HTFMYcBRbLoodWHD87litVfjTexBYjA2" alt="Logo 3" >
   </div>
-
 </div>
 
+      <div class="event-title">
+        <h1>India Industrial Fair 2025 Udaipur</h1>
+      </div>
+
+      <p class="event-description">
+        The 11th India Industrial Fair (IIF) 2025 will be held from January 10 to 13, 2025, at the DPS Ground in Udaipur. Hosted by Laghu Udyog Bharti (LUB).
+      </p>
+
+      <div class="event-timing">
+        <p>10th Jan, 2025 09:00 AM</p>
+        <p>|</p>
+        <p>13th Jan, 2025 10:00 PM IST</p>
+      </div>
+
+      <p class="event-location">DPS School Ground, Bhuwana, Udaipur, Rajasthan 313001</p>
+
+      <div class="row">
+        <div class="col-6">
+          <p><strong>Name:</strong> ${user.names}</p>
+          <p><strong>Email:</strong> ${user.emails}</p>
+          <p><strong>Organization:</strong> ${user.organization_names}</p>
+        </div>
+        <div class="col-6">
+          <p><strong>Mobile No:</strong> ${user.mobile_numbers}</p>
+          <p><strong>City:</strong> ${user.cities}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="ticket-right">
+      <p class="admit-one">Scan Me</p>
+      <div class="qr-code">
+        <img src="cid:qrcode" alt="QR Code">
+      </div>
+      <p class="ticket-code">Ticket Code</p>
+      <p class="ticket-code">${uniqueCode}</p>
+    </div>
+
+  </div>
 </body>
 </html>
-  `;
+
+`;
+
+
 }
 const eventBooking = async (req, res) => {
   try {
     const find_event = await Event.findById(req.params.eventid).select('start_date end_date');
 
     const qrCodeDirectory = path.join(__dirname, '../uploads', 'qrCode');
-    console.log("dir", qrCodeDirectory)
+    // console.log("dir", qrCodeDirectory)
     await createDirectory(qrCodeDirectory);
 
     const bookingDetailsArray = [];
@@ -1559,10 +1582,10 @@ const eventBooking = async (req, res) => {
 
       // Prepare the mail options
       const mailOptions = {
-        from: `"Your Ticket is Successfully Generated - Ready to Go!" <${process.env.EMAIL}>`,
+        from: process.env.EMAIL,
         to: customer_email,
         subject: "Event Ticket",
-        html: generateTicketHTML(user, uniqueCode),
+        html: generateTicketHTML(user, uniqueCode, qrCodeFilePath),
         attachments: [
           {
             filename: `qrcode_${uniqueCode}.png`,
@@ -1646,12 +1669,12 @@ const showUserData = async (req, res) => {
   try {
     // getting user id from token
     const user_id = req.user.sub;
-    console.log("User ID from auth:", user_id);
-    console.log("QR Code from params:", req.params.code);
+    // console.log("User ID from auth:", user_id);
+    // console.log("QR Code from params:", req.params.code);
 
     // Step 1: Finding the User Booking Details
     const eventBooking = await BookingDetails.findOne({ customer_qr_code: req.params.code });
-    console.log("Event Booking details:", eventBooking);
+    // console.log("Event Booking details:", eventBooking);
 
     // If no data found for event booking
     if (!eventBooking) {
@@ -1660,7 +1683,7 @@ const showUserData = async (req, res) => {
 
     // Step 2: Fetching the related Booking details using booking_id from eventBooking
     const check_data = await Booking.findById(eventBooking.booking_id);
-    console.log("Booking details:", check_data);
+    // console.log("Booking details:", check_data);
 
     // Step 3: Validating event dates
     const currentTime = new Date(); // Replace with dynamic current time
@@ -1669,23 +1692,27 @@ const showUserData = async (req, res) => {
     const event_from_date = check_data.event_from_date;
     // const event_to_date = new Date('2024-12-31T28:00:00.000Z');
     const event_to_date = check_data.event_to_date;
-    
-    if (currentTime < event_from_date || currentTime > event_to_date) {
-      return res.status(400).json({ success: false, message: "Event has expired or not started yet" });
+
+    if (currentTime < event_from_date) {
+      return res.status(400).json({ success: false, message: "Event does not started yet" });
+    }
+
+    if (currentTime > event_to_date) {
+      return res.status(400).json({ success: false, message: "Event has been expired" });
     }
 
     // Step 4: Validating the QR code
     if (eventBooking.customer_qr_code.toString() !== req.params.code.toString()) {
-      return res.status(400).json({ success: false, message: "QR Code does not match, not valid" });
+      return res.status(400).json({ success: false, message: "QR Code does not match" });
     }
 
-    if(eventBooking.is_cancelled === false){
+    if (eventBooking.is_cancelled === false) {
       eventBooking.is_cancelled = true
       await eventBooking.save()
-      return res.status(200).json({ success: true, message: "User found, Entry Allowed", eventBooking });
+      return res.status(200).json({ success: true, message: "The user entry has been allowed", eventBooking });
     }
-    else{
-    return res.status(400).json({ success: false, message: "User Already Present", eventBooking });
+    else {
+      return res.status(400).json({ success: false, message: "User already entered into the event", eventBooking });
     }
 
 
@@ -1694,7 +1721,7 @@ const showUserData = async (req, res) => {
     // return res.status(200).json({ success: true, message: "User details found", eventBooking });
 
   } catch (error) {
-    console.error("Error fetching user details:", error);
+    // console.error("Error fetching user details:", error);
     return res.status(500).json({ message: "Error fetching user details", error });
   }
 }

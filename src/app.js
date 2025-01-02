@@ -12,7 +12,15 @@ const app = require("./uploads/imageRoute");
 
 const main = express();
 const uploade=multer()
-main.use(helmet());
+// main.use(helmet());
+main.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", "data:"],
+    },
+  })
+);
 
 //parse json request body
 main.use(express.json());
