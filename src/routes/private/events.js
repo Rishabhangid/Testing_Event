@@ -10,7 +10,28 @@ const upload = require("../../middlewares/multer");
 const uploadMiddleware = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, "uploads/"); // Directory to store uploaded files
+      if (file.fieldname === "thumbnail") {
+        cb(null, path.join("src/uploads/Thumbnail/"));
+      }
+      else if (file.fieldname === "gallery") {
+        cb(null, "src/uploads/Gallery/");
+      }
+      else if (file.fieldname === "banner") {
+        cb(null, "src/uploads/Banner/");
+      }
+      else if (file.fieldname === "files") {
+        cb(null, "src/uploads/Files/");
+      }
+      else if (file.fieldname === "sponsors") {
+        cb(null, path.join("src/uploads/Sponsors/"));
+      }
+      else if (file.fieldname === "exhibitors") {
+        cb(null, "src/uploads/Exhibitors/");
+      }
+      else {
+        cb(null, "src/uploads/");
+        // cb(new Error("Unsupported file field"));
+      }
 
     },
     filename: function (req, file, cb) {
@@ -34,18 +55,16 @@ const uploadMiddleware = multer({
   { name: "thumbnail", maxCount: 1 },
   { name: "gallery", maxCount: 10 },
   { name: "banner", maxCount: 10 },
-  { name: "profile_picture", maxCount: 1 },
+  { name: "profile_picture", maxCount: 10 },
+  { name: "sponsors", maxCount: 10 },
+  { name: "exhibitors", maxCount: 10 },
 ]);
 
-// const uploadMiddleware = upload.fields([
-//   { name: "thumbnail", maxCount: 1 },
-//   { name: "gallery", maxCount: 10 },
-//   { name: "banner", maxCount: 10 },
-// ]);
+
 
 //View
 // router.get("/event-list", Authentication, Authorization, eventController.getEvents);
-router.get("/event-list",  eventController.getEvents);
+router.get("/event-list", eventController.getEvents);
 
 router.get(
   "/event-list/:id",
@@ -68,29 +87,73 @@ router.get(
 )
 
 
-//Create
+//Create 1
 router.post(
   "/basicinfo/create-event",
   Authentication,
   Authorization,
   eventController.addBasicInfo
 );
+// Creta New Added
+router.patch(
+  "/pitch/create-event/:eventId",
+  Authentication,
+  Authorization,
+  eventController.addPitchInfo
+);
+
+//  ADDING SPONSORS AND EXIBITORS
+// Multer for sponsors
+// const sponsorsStorage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     if (file.fieldname === "sponsors") {
+//       cb(null, path.join("src/uploads/Sponsors/"));
+//     }
+//     else if (file.fieldname === "exhibitors") {
+//       cb(null, "src/uploads/Exhibitors/");
+//     }
+//     cb(null, 'src/uploads/'); // You can specify the folder here
+//   },
+//   filename: function (req, file, cb) {
+//     cb(null, Date.now() + '-' + file.originalname); // Make file name unique
+//   }
+// });
+// const uploadSponsors = multer({ storage: sponsorsStorage });
+router.patch(
+  "/add-exhibitors-sponsors/create-event/:eventId",
+  Authentication,
+  Authorization,
+  // uploadSponsors
+  // .fields([{ name: 'exhibitors', maxCount: 10 }, { name: 'sponsors', maxCount: 10 } ]),
+  uploadMiddleware,
+  eventController.addExhibitorsAndSponsors
+);
+
+
+
+// Create 2
 router.patch(
   "/package/create-event/:eventId",
   Authentication,
   Authorization,
-  eventController.addPackageInfo
+  eventController.addPitchInfo
 );
 
+
+// Create 3
 router.patch(
   "/media/create-event/:eventId",
   Authentication,
   Authorization,
   uploadMiddleware,
- 
   eventController.addMedia
 );
 
+
+
+
+
+// Create 4
 router.patch(
   "/speakerlist/create-event/:eventId",
   Authentication,
@@ -98,12 +161,19 @@ router.patch(
   uploadMiddleware,
   eventController.addSpeaker
 );
+
+
+
+
+
+// Create 5
 router.patch(
   "/domain/create-event/:eventId",
   Authentication,
   Authorization,
   eventController.addDomainInfo
 );
+// Create 6
 router.patch(
   "/social/create-event/:eventId",
   Authentication,

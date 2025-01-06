@@ -52,6 +52,7 @@ const bookingDetailsSchema = new mongoose.Schema(
         customer_qr_code: { type: String, },
         is_cancelled: { type: Boolean, default: false, },
         booking_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' }, 
+        event_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' }, 
     },
     { timestamps: true }
 );

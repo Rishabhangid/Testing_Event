@@ -374,6 +374,133 @@ const getEventTypeByID = async (req, res) => {
   }
 }
 
+// Get all Users
+// const getEventInfo = async (req, res) => {
+//   try {
+//     const { page = 1, limit = 10, search = "", sort = "",  } = req.query;
+//     const { id } = req.params; // event id
+//     const options = {
+//       page: parseInt(page, 10),
+//       limit: parseInt(limit, 10),
+//       sort,
+//       search,
+//     };
+//     // console.log("fron frnt", id)
+
+//     const query = {};
+//     if (search) {
+//       query.$or = [
+//         { name: { $regex: search, $options: "i" } }, // Example: Searching by name (case insensitive)
+//         { description: { $regex: search, $options: "i" } }, // Example: Searching by description
+        
+//       ];
+//     }
+//     // const skip = (page - 1) * limit;
+//     // Finding Event
+//     const find_event = await Bookings.find({ event_id: id });
+//     // console.log("total booking for a particular event:", find_event) // 13 sari booing ek event ki
+
+//     // Calculatong total no of Boonig fora particular event
+//     const total_bookings = await Bookings.find({ event_id: id });
+//     // console.log("total bookings", total_bookings)
+
+
+
+//     // Default sorting by creation date
+//     const sortOptions = sort ? { [sort]: 1 } : { created_at: -1 };
+//     // Pagination: skip and limit
+//     const skip = (page - 1) * limit;
+//     // All Bookings of a event
+//     // const all_bookings = await BookingDetails.find({ event_id: id })(query)
+//     // .sort(sortOptions)
+//     // .skip(skip)
+//     // .limit(limit);
+//     const all_bookings = await BookingDetails.find({
+//       event_id: id,
+//       ...query,
+//     })
+//       .sort(sortOptions)
+//       .skip(skip)
+//       .limit(limit);
+//     console.log(all_bookings, "---------------all_bookings---------------");
+
+//     // Fetching only Booking ID
+//     const bookingID = await Bookings.findOne({ event_id: id });
+//     // console.log("booking id: ", bookingID) // 67778c8dd5ac3bab61259db5
+
+//     // Fetching Attendies of a Booking
+//     const attendies = await BookingDetails.find({ booking_id: bookingID._id })
+//     // console.log(attendies, "---------------attendies---------------");
+
+
+
+//     if (!find_event) {
+//       return res.status(404).json({ message: "Event type not found" });
+//     }
+//     // console.log(find_event, "---------------find_event---------------");
+
+
+//     // res.status(200).json({  success: true, message: "Event booking fetched successfully", totalBookings: total_bookings, data: find_event });
+//     // res.status(200).json({ success: true, message: "Event booking fetched successfully", totalBookings: total_bookings, totalAttendies: attendies });
+//     res.status(200).json({ success: true, message: "Event booking users fetched successfully", totalBookings: total_bookings, totalAttendies: all_bookings });
+//   } catch (error) {
+//     res.status(500).json({ message: "Failed to get event type", error });
+//   }
+// }
+const getEventInfo = async (req, res) => {
+  try {
+    // Extract query parameters
+    const { page = 1, limit = 10, search = "", sort = "" } = req.query;
+    const { id } = req.params; // event ID
+
+    // Parse and sanitize parameters
+    const currentPage = parseInt(page, 10);
+    const itemsPerPage = parseInt(limit, 10);
+
+    // Build query object
+    const query = { event_id: id }; // Event-specific filter
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } }, // Search in 'name'
+        { description: { $regex: search, $options: "i" } }, // Search in 'description'
+      ];
+    }
+
+    // Calculate skip and limit
+    const skip = (currentPage - 1) * itemsPerPage;
+
+    // Sorting options
+    const sortOptions = sort ? { [sort]: 1 } : { created_at: -1 };
+
+    // Fetch total bookings and total attendees
+    const totalBookings = await BookingDetails.countDocuments({event_id: id });
+    console.log(totalBookings, "---------------totalBookings---------------");
+    const allBookings = await BookingDetails.find(query)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(itemsPerPage);
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalBookings / itemsPerPage);
+
+    // Respond with paginated data
+    res.status(200).json({
+      success: true,
+      message: "Event booking users fetched successfully",
+      totalBookings,
+      currentPage,
+      totalPages,
+      itemsPerPage,
+      data: allBookings,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to get event type", error });
+  }
+};
+
+
+
+
 // const qrCodeDirectory = path.join(__dirname, 'public', 'qrcodes');
 
 // // Ensure the directory exists, or create it if it doesn't
@@ -1338,7 +1465,7 @@ const transporter = nodemailer.createTransport({
 
 function generateTicketHTML(user, uniqueCode, qrCodeFilePath) {
   return `
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
 <head>
   <style>
@@ -1350,32 +1477,34 @@ function generateTicketHTML(user, uniqueCode, qrCodeFilePath) {
     }
 
     .ticket {
+      width: 100%;
       max-width: 800px;
       margin: 20px auto;
       background-color: #fff;
       border: 1px solid #ddd;
       border-radius: 8px;
-      display: flex;
       overflow: hidden;
     }
 
-    .ticket-left {
-      flex: 3;
+    .ticket-left,
+    .ticket-right {
       padding: 20px;
+    }
+
+    .ticket-left {
       background-color: #FFE5D2;
       border-right: 1px dashed #ddd;
     }
 
     .ticket-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      text-align: center;
       margin-bottom: 20px;
     }
 
     .ticket-header img {
       height: 50px;
       width: auto;
+      margin: 5px;
     }
 
     .event-title h1 {
@@ -1391,10 +1520,10 @@ function generateTicketHTML(user, uniqueCode, qrCodeFilePath) {
     }
 
     .event-timing {
-      display: flex;
-      gap: 10px;
+      display: inline-block;
       margin-bottom: 10px;
       font-weight: bold;
+      font-size: 14px;
     }
 
     .event-location {
@@ -1404,12 +1533,13 @@ function generateTicketHTML(user, uniqueCode, qrCodeFilePath) {
     }
 
     .row {
-      display: flex;
-      justify-content: space-between;
+      display: table;
+      width: 100%;
     }
 
     .col-6 {
-      flex: 1;
+      width: 50%;
+      display: table-cell;
       padding-right: 10px;
     }
 
@@ -1419,10 +1549,8 @@ function generateTicketHTML(user, uniqueCode, qrCodeFilePath) {
     }
 
     .ticket-right {
-      flex: 1;
-      padding: 20px;
-      text-align: center;
       background-color: #fafafa;
+      text-align: center;
     }
 
     .admit-one {
@@ -1453,65 +1581,120 @@ function generateTicketHTML(user, uniqueCode, qrCodeFilePath) {
       border-radius: 5px;
     }
 
+    /* Mobile responsive */
+    @media only screen and (max-width: 600px) {
+      .ticket {
+        width: 100%;
+      }
+
+      .ticket-left,
+      .ticket-right {
+        padding: 15px;
+        width: 100%;
+        border-right: none;
+      }
+
+      .ticket-header img {
+        width: 100%;
+        height: auto;
+      }
+
+      .row {
+        display: block;
+        width: 100%;
+      }
+
+      .col-6 {
+        width: 100%;
+        display: block;
+        padding-right: 0;
+        margin-bottom: 10px;
+      }
+
+      .event-title h1 {
+        font-size: 20px;
+      }
+
+      .event-description,
+      .event-timing,
+      .event-location {
+        font-size: 12px;
+      }
+
+      .qr-code img {
+        width: 120px;
+        height: 120px;
+      }
+
+      .ticket-code {
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="ticket">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td class="ticket-left" width="65%">
+          <div class="ticket-header">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td width="32%" style="text-align: center; padding: 5px;">
+                  <img src="https://drive.google.com/uc?id=1UNLJL-0nVPBcz5cURnx2EgeyJFXwdt8l" alt="Logo 1">
+                </td>
+                <td width="32%" style="text-align: center; padding: 5px;">
+                  <img src="https://drive.google.com/uc?id=18mL0Ew2mq3jytR8ETPodyInBRlO4oX3e" alt="Logo 2">
+                </td>
+                <td width="32%" style="text-align: center; padding: 5px;">
+                  <img src="https://drive.google.com/uc?id=1HTFMYcBRbLoodWHD87litVfjTexBYjA2" alt="Logo 3">
+                </td>
+              </tr>
+            </table>
+          </div>
 
-    <div class="ticket-left">
-     <div class="ticket-header" style="width: 100%; margin-bottom: 20px; text-align: center;">
-  <div style="display: inline-block; width: 32%; padding: 0 10px;">
-    <img src="https://drive.google.com/uc?id=1UNLJL-0nVPBcz5cURnx2EgeyJFXwdt8l" alt="Logo 1" >
-  </div>
-  <div style="display: inline-block; width: 32%; padding: 0 10px;">
-    <img src="https://drive.google.com/uc?id=18mL0Ew2mq3jytR8ETPodyInBRlO4oX3e" alt="Logo 2" >
-  </div>
-  <div style="display: inline-block; width: 32%; padding: 0 10px;">
-    <img src="https://drive.google.com/uc?id=1HTFMYcBRbLoodWHD87litVfjTexBYjA2" alt="Logo 3" >
-  </div>
-</div>
+          <div class="event-title">
+            <h1>India Industrial Fair 2025 Udaipur</h1>
+          </div>
 
-      <div class="event-title">
-        <h1>India Industrial Fair 2025 Udaipur</h1>
-      </div>
+          <p class="event-description">
+            The 11th India Industrial Fair (IIF) 2025 will be held from January 10 to 13, 2025, at the DPS Ground in Udaipur. Hosted by Laghu Udyog Bharti (LUB).
+          </p>
 
-      <p class="event-description">
-        The 11th India Industrial Fair (IIF) 2025 will be held from January 10 to 13, 2025, at the DPS Ground in Udaipur. Hosted by Laghu Udyog Bharti (LUB).
-      </p>
+          <div class="event-timing">
+            <p>10th Jan, 2025 09:00 AM | 13th Jan, 2025 10:00 PM IST</p>
+          </div>
 
-      <div class="event-timing">
-        <p>10th Jan, 2025 09:00 AM</p>
-        <p>|</p>
-        <p>13th Jan, 2025 10:00 PM IST</p>
-      </div>
+          <p class="event-location">DPS School Ground, Bhuwana, Udaipur, Rajasthan 313001</p>
 
-      <p class="event-location">DPS School Ground, Bhuwana, Udaipur, Rajasthan 313001</p>
+          <div class="row">
+            <div class="col-6">
+              <p><strong>Name:</strong> ${user.names}</p>
+              <p><strong>Email:</strong> ${user.emails}</p>
+              <p><strong>Organization:</strong> ${user.organization_names}</p>
+            </div>
+            <div class="col-6">
+              <p><strong>Mobile No:</strong> ${user.mobile_numbers}</p>
+              <p><strong>City:</strong> ${user.cities}</p>
+            </div>
+          </div>
+        </td>
 
-      <div class="row">
-        <div class="col-6">
-          <p><strong>Name:</strong> ${user.names}</p>
-          <p><strong>Email:</strong> ${user.emails}</p>
-          <p><strong>Organization:</strong> ${user.organization_names}</p>
-        </div>
-        <div class="col-6">
-          <p><strong>Mobile No:</strong> ${user.mobile_numbers}</p>
-          <p><strong>City:</strong> ${user.cities}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="ticket-right">
-      <p class="admit-one">Scan Me</p>
-      <div class="qr-code">
-        <img src="cid:qrcode" alt="QR Code">
-      </div>
-      <p class="ticket-code">Ticket Code</p>
-      <p class="ticket-code">${uniqueCode}</p>
-    </div>
-
+        <td class="ticket-right" width="35%">
+          <p class="admit-one">Scan Me</p>
+          <div class="qr-code">
+            <img src="cid:qrcode" alt="QR Code">
+          </div>
+          <p class="ticket-code">Ticket Code</p>
+          <p class="ticket-code">${uniqueCode}</p>
+        </td>
+      </tr>
+    </table>
   </div>
 </body>
 </html>
+
+
 
 `;
 
@@ -1572,6 +1755,7 @@ const eventBooking = async (req, res) => {
         customer_qr_picture: `qrcode_${uniqueCode}.png`,
         customer_qr_code: uniqueCode,
         booking_id: savedBooking._id,
+        event_id: req.params.eventid
       });
 
       const savedBookingDetails = await newBookingDetails.save();
@@ -1678,7 +1862,7 @@ const showUserData = async (req, res) => {
 
     // If no data found for event booking
     if (!eventBooking) {
-      return res.status(404).json({ message: "Event booking not found" });
+      return res.status(404).json({ status: 404, message: "Event booking not found" });
     }
 
     // Step 2: Fetching the related Booking details using booking_id from eventBooking
@@ -1694,25 +1878,25 @@ const showUserData = async (req, res) => {
     const event_to_date = check_data.event_to_date;
 
     if (currentTime < event_from_date) {
-      return res.status(400).json({ success: false, message: "Event does not started yet" });
+      return res.status(400).json({ status: 400, success: false, message: "Event does not started yet" });
     }
 
     if (currentTime > event_to_date) {
-      return res.status(400).json({ success: false, message: "Event has been expired" });
+      return res.status(400).json({ status: 400, success: false, message: "Event has been expired" });
     }
 
     // Step 4: Validating the QR code
     if (eventBooking.customer_qr_code.toString() !== req.params.code.toString()) {
-      return res.status(400).json({ success: false, message: "QR Code does not match" });
+      return res.status(400).json({ status: 400, success: false, message: "QR Code does not match" });
     }
 
     if (eventBooking.is_cancelled === false) {
       eventBooking.is_cancelled = true
       await eventBooking.save()
-      return res.status(200).json({ success: true, message: "The user entry has been allowed", eventBooking });
+      return res.status(200).json({ status: 200, success: true, message: "The user entry has been allowed", eventBooking });
     }
     else {
-      return res.status(400).json({ success: false, message: "User already entered into the event", eventBooking });
+      return res.status(400).json({ status: 400, success: false, message: "User already entered into the event", eventBooking });
     }
 
 
@@ -1806,4 +1990,4 @@ const eventDetails = async (req, res) => {
 
 
 
-module.exports = { deleteEventType, createEventType, getEventType, updateEventType, getEventTypeByID, eventBooking, eventDetails, showUserData, updateEntry }
+module.exports = { deleteEventType, createEventType, getEventType, getEventInfo, updateEventType, getEventTypeByID, eventBooking, eventDetails, showUserData, updateEntry }

@@ -41,6 +41,15 @@ router.post("/delete-event-type", Authentication, Authorization, eventTypeContro
 // GET: Get Unique Event Detail by ID
 router.get("/get-event-type/:id", Authentication, eventTypeController.getEventTypeByID);
 
+
+
+
+// GET: Get Details about total no of ticket booked for a particulat event
+router.get("/get-event-info/:id", Authentication, eventTypeController.getEventInfo);
+
+
+
+
 // POST: Adding new booking
 // router.post("/addbooking/:eventid", upload.any("pictures", 10), Authentication, eventTypeController.eventBooking);
 router.post("/addbooking/:eventid", upload.any("pictures", 10),  eventTypeController.eventBooking);

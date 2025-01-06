@@ -44,14 +44,14 @@ const addPackageInfo = async (eventId, packageData) => {
     console.log(packageData, "---------------packages---------------");
 
     // Find the event by ID
-    let event = await EventTickets.create({...packageData,event_id:eventId})
+    let event = await Event.findByIdAndUpdate(eventId,  { $set: packageData },{ new: true, runValidators: true } )
     if (!event) {
       throw new ApiError(httpStatus.NOT_FOUND, "Event not found");
     }
 
 
     // Save the updated event
-    await event.save();
+    // await event.save();
 
     console.log(event, "---------------event---------------");
     return { created: true, event };
@@ -60,6 +60,29 @@ const addPackageInfo = async (eventId, packageData) => {
     throw error;
   }
 };
+
+const addPitchInformation = async (eventId, pitches) => {
+  try {
+    console.log(pitches, "---------------pitches---------------");
+
+    // Find the event by ID
+    let event = await Event.findByIdAndUpdate(eventId, { program_details:pitches.program_details, exhibitor_and_participants:pitches.exhibitor_and_participants },{ new: true, runValidators: true } )
+    if (!event) {
+      throw new ApiError(httpStatus.NOT_FOUND, "Event not found");
+    }
+
+
+    // Save the updated event
+    // await event.save();
+
+    console.log(event, "---------------event---------------");
+    return { created: true, event };
+  } catch (error) {
+    console.error("Error adding package info:", error);
+    throw error;
+  }
+};
+
 const getPackageInfo = async (eventId) => {
   console.log(eventId,"------");
   try {
@@ -103,11 +126,12 @@ const addMedia = async ({ eventId, thumbnail, gallery, banners, video_link }) =>
         throw new ApiError(httpStatus.BAD_REQUEST, "Invalid thumbnail file");
       }
 
-      const newThumbnail = new Thumbnail({
-        event_id: eventId,
-        thumbnail_path: thumbnail[0].filename, // Assuming file.filename contains the thumbnail's location
-      });
-      await newThumbnail.save();
+      // const newThumbnail = new Thumbnail({
+      //   event_id: eventId,
+      //   thumbnail_path: thumbnail[0].filename, // Assuming file.filename contains the thumbnail's location
+      // });
+      // await newThumbnail.save();
+      const newThumbnail=await Event.findByIdAndUpdate(eventId,{$set:{thumbnail_path: thumbnail[0].filename}},{new:true,runValidators:true})
     }
 
     // Save gallery files in Gallery table
@@ -177,7 +201,203 @@ const addMedia = async ({ eventId, thumbnail, gallery, banners, video_link }) =>
 };
 
 
-const addSpeaker = async (eventId, speakerData,profile_picture) => {
+// const addSpeaker = async (eventId, speakerData,profile_picture) => {
+//   const event = await Event.findById(eventId);
+ 
+//   if (!event) {
+//     throw new ApiError(httpStatus.NOT_FOUND, "Event not found");
+//   }
+//   if (!profile_picture) {
+//     throw new ApiError(httpStatus.NOT_FOUND, "Profile Picture not found");
+//   }
+//   try {
+    
+//     const speckers= await SpeakerSchema.create({...speakerData,profile_picture:profile_picture[0].filename,event_id:eventId});
+
+//      return { data:speckers, statusCode: 200 };
+//   } catch (error) {
+//     console.error(error, "---------------error---------------");
+//     return { data:[], statusCode: 500 };
+//   }
+// };
+
+
+// const addSpeaker = async (eventId, speakerData, profile_pictures) => {
+//   const event = await Event.findById(eventId);
+
+//   if (!event) {
+//     throw new ApiError(httpStatus.NOT_FOUND, "Event not found");
+//   }
+
+//   if (!profile_pictures || profile_pictures.length === 0) {
+//     throw new ApiError(httpStatus.BAD_REQUEST, "Profile pictures not found");
+//   }
+
+//   // Validate speaker data arrays
+//   const { name, designation, bio } = speakerData;
+//   if (!Array.isArray(name) || !Array.isArray(designation) || name.length !== designation.length) {
+//     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid speaker data arrays");
+//   }
+
+//   // Build speakers array
+//   const speakers = name.map((speakerName, index) => ({
+//     name: speakerName,
+//     designation: designation[index],
+//     bio: bio ? bio[index] : "", // Optional bio field
+//     profile_picture: profile_pictures[index]?.filename || "", // Match profile picture by index
+//   }));
+
+//   try {
+//     // Add speakers to the event
+//     event.speakers = [...event.speakers, ...speakers];
+//     await event.save();
+
+//     return { data: event.speakers, statusCode: 200 };
+//   } catch (error) {
+//     console.error("Error adding speakers:", error);
+//     throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Failed to add speakers");
+//   }
+// };
+
+
+
+// const addSpeaker = async (eventId, speakerData, profile_pictures) => {
+//   const event = await Event.findById(eventId);
+//   console.log(speakerData, "---------------speakerData inside---------------");
+//   console.log(profile_pictures, "---------------profile_pictures inside---------------");
+
+//   if (!event) {
+//     throw new ApiError(httpStatus.NOT_FOUND, "Event not found");
+//   }
+
+//   if (!profile_pictures || profile_pictures.length !== speakerData.length) {
+//     throw new ApiError(httpStatus.BAD_REQUEST, "Each speaker must have a corresponding profile picture");
+//   }
+
+//   try {
+//     const speakers = [];
+
+//     for (let i = 0; i < speakerData.length; i++) {
+//       const { name, designation } = speakerData[i];
+//       console.log("name,des", name ,designation)
+//       const profile_picture = profile_pictures[i].filename;
+//       console.log("immm", profile_picture)
+
+//       const speakerRecord = await SpeakerSchema.create({
+//         event_id: eventId,
+//         name,
+//         designation,
+//         profile_picture,
+//         event_id: eventId,
+//       });
+
+//       speakers.push(speakerRecord);
+      
+//     }
+//     console.log(speakers, "---------------speakerRecord---------------");
+
+//     return { data: speakers, statusCode: 200 };
+//   } catch (error) {
+//     console.error(error, "---------------error---------------");
+//     return { data: [], statusCode: 500 };
+//   }
+// };
+
+
+// const addSpeaker = async (eventId, speakerData, profile_pictures) => {
+//   const event = await Event.findById(eventId);
+  
+//   console.log(speakerData, "---------------speakerData inside---------------");
+//   console.log(Array.isArray(speakerData), "Is speakerData an array?");
+//   console.log(profile_pictures, "---------------profile_pictures inside---------------");
+//   console.log(typeof speakerData, "Type of speakerData");
+
+//   if (!event) {
+//     throw new ApiError(httpStatus.NOT_FOUND, "Event not found");
+//   }
+
+//   if (!profile_pictures || profile_pictures.length !== speakerData.length) {
+//     throw new ApiError(httpStatus.BAD_REQUEST, "Each speaker must have a corresponding profile picture");
+//   }
+
+//   try {
+//     // Use `map` to create speakers
+//     const speakers = await Promise.all(
+//       speakerData.map(async (data, index) => {
+//         const { name, designation } = data;
+//         const profile_picture = profile_pictures[index].filename;
+
+//         console.log("Creating speaker:", { name, designation, profile_picture });
+
+//         // Create and return the speaker record
+//         return await SpeakerSchema.create({
+//           event_id: eventId,
+//           name,
+//           designation,
+//           profile_picture,
+//         });
+//       })
+//     );
+
+//     console.log(speakers, "---------------speakerRecord---------------");
+
+//     return { data: speakers, statusCode: 200 };
+//   } catch (error) {
+//     console.error(error, "---------------error---------------");
+//     return { data: [], statusCode: 500 };
+//   }
+// };
+
+
+const addSpeaker = async (eventId, speakerData, profile_pictures) => {
+  const event = await Event.findById(eventId);
+  if (!event) throw new ApiError(httpStatus.NOT_FOUND, "Event not found");
+
+  if (!Array.isArray(speakerData)) {
+    speakerData = typeof speakerData === "object" ? Object.values(speakerData) : [];
+  }
+
+  if (!profile_pictures || profile_pictures.length !== speakerData.length) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Each speaker must have a corresponding profile picture");
+  }
+
+  try {
+    const speakers = await Promise.all(
+      speakerData.map(async (data, index) => {
+        const { name, designation } = data;
+        const profile_picture = profile_pictures[index].filename;
+
+        return await SpeakerSchema.create({
+          event_id: eventId,
+          name,
+          designation,
+          profile_picture,
+        });
+      })
+    );
+
+    return { data: speakers, statusCode: 200 };
+  } catch (error) {
+    console.error(error, "Database error");
+    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Failed to add speakers");
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const addDomainInfo = async (eventId, speakerData,profile_picture) => {
   const event = await Event.findById(eventId);
  
   if (!event) {
@@ -196,6 +416,31 @@ const addSpeaker = async (eventId, speakerData,profile_picture) => {
     return { data:[], statusCode: 500 };
   }
 };
+
+// facebook, linkedin, instagram, twitter, youtube
+const addSocial = async (eventId, links) => {
+  const event = await Event.findById(eventId);
+  console.log(links.facebook, "---------------links---------------");
+ 
+  if (!event) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Event not found");
+  }
+  if (!links) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Profile Picture not found");
+  }
+  try {
+    
+    const speckers= await Event.findByIdAndUpdate(eventId, {$set:{facebook:links.facebook, twitter:links.twitter, youtube:links.youtuber, linkedin:links.linkedin, instagram:links.instagram}}, {new:true}, {runValidators:true});
+
+     return { data:speckers, statusCode: 200 };
+  } catch (error) {
+    console.error(error, "---------------error---------------");
+    return { data:[], statusCode: 500 };
+  }
+};
+
+
+
 
 const updateBasicinfo = async (id, updateData) => {
   const updatedEvent = await Event.findByIdAndUpdate(id, updateData, { new: true });
@@ -272,5 +517,9 @@ module.exports = {
   updateMedia,
   suggestions,
   getCreatePackageById,
-  getPackageInfo
+  getPackageInfo,
+  addSocial,
+  addPitchInformation
 };
+
+
