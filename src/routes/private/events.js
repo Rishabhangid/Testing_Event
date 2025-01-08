@@ -86,9 +86,9 @@ const uploadMiddleware = multer({
     },
   }),
   fileFilter: function (req, file, cb) {
-    const allowedTypes = /jpeg|jpg|png|pdf/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    // const allowedTypes = /jpeg|jpg|png|pdf/;
+    // const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    // const mimetype = allowedTypes.test(file.mimetype);
 
     if (extname && mimetype) {
       cb(null, true);
