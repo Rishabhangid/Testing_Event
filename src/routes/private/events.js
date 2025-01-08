@@ -6,36 +6,81 @@ const { Authentication, Authorization } = require("../../middlewares");
 const path = require("path");
 const upload = require("../../middlewares/multer");
 
-//Save
+//Save Files
+// const uploadMiddleware = multer({
+//   storage: multer.diskStorage({
+//     destination: function (req, file, cb) {
+//       if (file.fieldname === "thumbnail") {
+//         cb(null, path.join("src/uploads/Thumbnail/"));
+//       }
+//       else if (file.fieldname === "gallery") {
+//         cb(null, "src/uploads/Gallery/");
+//       }
+//       else if (file.fieldname === "banner") {
+//         cb(null, "src/uploads/Banner/");
+//       }
+//       else if (file.fieldname === "files") {
+//         cb(null, "src/uploads/Files/");
+//       }
+//       else if (file.fieldname === "sponsors") {
+//         cb(null, path.join("src/uploads/Sponsors/"));
+//       }
+//       else if (file.fieldname === "documents") {
+//         cb(null, path.join("src/uploads/Documents/"));
+//       }
+//       else if (file.fieldname === "profile_picture") {
+//         cb(null, path.join("src/uploads/Profile_Picture/"));
+//       }
+//       else if (file.fieldname === "exhibitors") {
+//         cb(null, "src/uploads/Exhibitors/");
+//       }
+//       else {
+//         cb(null, "src/uploads/");
+//         // cb(new Error("Unsupported file field"));
+//       }
+
+//     },
+//     filename: function (req, file, cb) {
+//       console.log(file, "---------------file---------------");
+//       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+//       cb(null, uniqueSuffix + "-" + file.originalname);
+//     },
+//   }),
+//   fileFilter: function (req, file, cb) {
+//     const allowedTypes = /jpeg|jpg|png|pdf/;
+//     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+//     const mimetype = allowedTypes.test(file.mimetype);
+
+//     if (extname && mimetype) {
+//       return cb(null, true);
+//     } else {
+//       cb(new Error("Only images (PNG, JPG) and PDFs are allowed!"));
+//     }
+//   },
+// }).fields([
+//   { name: "thumbnail", maxCount: 1 },
+//   { name: "gallery", maxCount: 10 },
+//   { name: "banner", maxCount: 10 },
+//   { name: "profile_picture", maxCount: 10 },
+//   { name: "sponsors", maxCount: 10 },
+//   { name: "exhibitors", maxCount: 10 },
+//   { name: "documents", maxCount: 3 },
+// ]);
+
+
 const uploadMiddleware = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
-      if (file.fieldname === "thumbnail") {
-        cb(null, path.join("src/uploads/Thumbnail/"));
-      }
-      else if (file.fieldname === "gallery") {
-        cb(null, "src/uploads/Gallery/");
-      }
-      else if (file.fieldname === "banner") {
-        cb(null, "src/uploads/Banner/");
-      }
-      else if (file.fieldname === "files") {
-        cb(null, "src/uploads/Files/");
-      }
-      else if (file.fieldname === "sponsors") {
-        cb(null, path.join("src/uploads/Sponsors/"));
-      }
-      else if (file.fieldname === "exhibitors") {
-        cb(null, "src/uploads/Exhibitors/");
-      }
-      else {
-        cb(null, "src/uploads/");
-        // cb(new Error("Unsupported file field"));
-      }
-
+      const destinations = {
+        thumbnail: "src/uploads/Thumbnail/",
+        gallery: "src/uploads/Gallery/",
+        banner: "src/uploads/Banner/",
+        documents: "src/uploads/Documents/",
+        // Add other cases if needed
+      };
+      cb(null, destinations[file.fieldname] || "src/uploads/");
     },
     filename: function (req, file, cb) {
-      console.log(file, "---------------file---------------");
       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
       cb(null, uniqueSuffix + "-" + file.originalname);
     },
@@ -46,7 +91,7 @@ const uploadMiddleware = multer({
     const mimetype = allowedTypes.test(file.mimetype);
 
     if (extname && mimetype) {
-      return cb(null, true);
+      cb(null, true);
     } else {
       cb(new Error("Only images (PNG, JPG) and PDFs are allowed!"));
     }
@@ -55,131 +100,52 @@ const uploadMiddleware = multer({
   { name: "thumbnail", maxCount: 1 },
   { name: "gallery", maxCount: 10 },
   { name: "banner", maxCount: 10 },
-  { name: "profile_picture", maxCount: 10 },
-  { name: "sponsors", maxCount: 10 },
-  { name: "exhibitors", maxCount: 10 },
+  { name: "document", maxCount: 3 },
 ]);
 
 
-
-//View
-// router.get("/event-list", Authentication, Authorization, eventController.getEvents);
+// Fetching All Events [ PUBLIC ]
 router.get("/event-list", eventController.getEvents);
 
-router.get(
-  "/event-list/:id",
-  Authentication,
-  Authorization,
-  eventController.getEventById
-);
-router.get(
-  "/search-event-list",
-  Authentication,
-  Authorization,
-  eventController.searchEvents
-);
+// Fetching All Events [ ADMIN ]
+router.get("/event-admin", eventController.getEventsAdmin);
 
-router.get(
-  "/package-list/:id",
-  Authentication,
-  // Authorization,
-  eventController.getPackageInfo
-)
+// Fetching Single Event By Id
+router.get("/event-list/:id", Authentication, Authorization, eventController.getEventById);
 
+// Searching Event
+router.get("/search-event-list", Authentication, Authorization, eventController.searchEvents);
 
-//Create 1
-router.post(
-  "/basicinfo/create-event",
-  Authentication,
-  Authorization,
-  eventController.addBasicInfo
-);
-// Creta New Added
-router.patch(
-  "/pitch/create-event/:eventId",
-  Authentication,
-  Authorization,
-  eventController.addPitchInfo
-);
+// Fetching Package Information
+router.get("/package-list/:id", Authentication, eventController.getPackageInfo)
 
-//  ADDING SPONSORS AND EXIBITORS
-// Multer for sponsors
-// const sponsorsStorage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     if (file.fieldname === "sponsors") {
-//       cb(null, path.join("src/uploads/Sponsors/"));
-//     }
-//     else if (file.fieldname === "exhibitors") {
-//       cb(null, "src/uploads/Exhibitors/");
-//     }
-//     cb(null, 'src/uploads/'); // You can specify the folder here
-//   },
-//   filename: function (req, file, cb) {
-//     cb(null, Date.now() + '-' + file.originalname); // Make file name unique
-//   }
-// });
-// const uploadSponsors = multer({ storage: sponsorsStorage });
-router.patch(
-  "/add-exhibitors-sponsors/create-event/:eventId",
-  Authentication,
-  Authorization,
-  // uploadSponsors
-  // .fields([{ name: 'exhibitors', maxCount: 10 }, { name: 'sponsors', maxCount: 10 } ]),
-  uploadMiddleware,
-  eventController.addExhibitorsAndSponsors
-);
+// 1. Create Event ( Adding Basic Info )
+router.post("/basicinfo/create-event", Authentication, Authorization, eventController.addBasicInfo);
 
+// 2. Create Event ( Adding Pitches )
+router.patch("/pitch/create-event/:eventId", Authentication, Authorization, eventController.addPitchInfo);
 
+// 3. Create Event ( Adding Sponsor and Exibitor Images )
+router.patch( "/add-exhibitors-sponsors/create-event/:eventId", Authentication, Authorization, uploadMiddleware, eventController.addExhibitorsAndSponsors);
 
-// Create 2
-router.patch(
-  "/package/create-event/:eventId",
-  Authentication,
-  Authorization,
-  eventController.addPitchInfo
-);
+// 4. Create Event ( Adding Packages )
+router.patch("/package/create-event/:eventId", Authentication, Authorization, eventController.addPackageInfo);
 
+// 5. Create Event ( Adding Media Events )
+router.patch("/media/create-event/:eventId", Authentication, Authorization, uploadMiddleware, eventController.addMedia);
 
-// Create 3
-router.patch(
-  "/media/create-event/:eventId",
-  Authentication,
-  Authorization,
-  uploadMiddleware,
-  eventController.addMedia
-);
+// 6. Create Event ( Add Speakers )
+router.patch("/speakerlist/create-event/:eventId", Authentication, Authorization, uploadMiddleware, eventController.addSpeaker);
 
+// 7. Create Event ( Add Domain )
+router.patch("/domain/create-event/:eventId", Authentication, Authorization, eventController.addDomainInfo);
 
+// 8. Create Event ( Add Social Media Links )
+router.patch("/social/create-event/:eventId", Authentication, Authorization, eventController.addSocial);
 
+// 9. Update Event Status ( Using to Show Event which wanna to show )
+router.get("/updatestatus/create-event/:eventId", Authentication, Authorization, eventController.updateEventStatus);
 
-
-// Create 4
-router.patch(
-  "/speakerlist/create-event/:eventId",
-  Authentication,
-  Authorization,
-  uploadMiddleware,
-  eventController.addSpeaker
-);
-
-
-
-
-
-// Create 5
-router.patch(
-  "/domain/create-event/:eventId",
-  Authentication,
-  Authorization,
-  eventController.addDomainInfo
-);
-// Create 6
-router.patch(
-  "/social/create-event/:eventId",
-  Authentication,
-  Authorization,
-  eventController.addSocial
-);
 //Update
 router.put(
   "/basicinfo/edit-event/:id",
@@ -218,6 +184,6 @@ router.put(
   Authorization,
   eventController.updateSocial
 );
-//Delete
+
 
 module.exports = router;

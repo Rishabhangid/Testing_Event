@@ -7,17 +7,7 @@ const Exhibitor = require("../models/exhibitorSchema");
 const Sponsor = require("../models/sponsorsSchema");
 
 
-const getEvents = async (req, res) => {
-  console.log(req.body, "---------------req---------------");
-  try {
-    const getHotels = await eventService.getEvents();
-    res.json({ success: true, events: getHotels });
-  } catch (error) {
-    console.log(error, "---------------error---------------");
-    res.status(500).json({ success: false, message: "new Server Error" });
-  }
-}
-
+// 1. Create Event : Basic Information : /v1/auth/events/basicinfo/create-event [POST]
 const addBasicInfo = catchAsync(async (req, res) => {
   const { created, addbasicInfo } = await eventService.addBasicInfo(req.body);
   console.log(addbasicInfo, "---------------addBasicInfo---------------");
@@ -28,11 +18,11 @@ const addBasicInfo = catchAsync(async (req, res) => {
   }
 });
 
-// 
+// 2. Create Event : Adding Pitches : /v1/auth/events/pitch/create-event/:eventId [PATCH]
 const addPitchInfo = catchAsync(async (req, res) => {
   const { eventId } = req.params;
   const pitches = req.body;
-  console.log(eventId, pitches, "---------------eventId, packages---------------");
+  console.log("Event ID and Pitches: ", eventId, pitches);
   try {
     const { created, event } = await eventService.addPitchInformation(eventId, pitches);
     console.log(event, "---------------package---------------");
@@ -47,31 +37,21 @@ const addPitchInfo = catchAsync(async (req, res) => {
   }
 });
 
-
-
-
-// Add spoinsors and exhibitors
+// 3. Create Event : Adding sponsors and exhibitors images : /v1/auth/events/add-exhibitors-sponsors/create-event/eventId [PATCH]
 const addExhibitorsAndSponsors = async (req, res) => {
-  console.log("hyy")
   try {
     const { eventId } = req.params;
     const { exhibitors, sponsors } = req.files;
-
 
     if (!Array.isArray(exhibitors) || !Array.isArray(sponsors)) {
       return res.status(400).json({ message: "Exhibitors and Sponsors must be arrays." });
     }
 
-    // Save Exhibitors
-    const newExhibitors = await Exhibitor.insertMany(
-      exhibitors.map(image => ({
-        event_id: eventId,  // Ensure you pass the event ID correctly
-        image: image.filename,  // Save the filename of the image
-      }))
-    );
-    // Save Sponsors
+    // Saving Exhibitors and Sponsors
+    const newExhibitors = await Exhibitor.insertMany(exhibitors.map(image => ({ event_id: eventId, image: image.filename })));
     const newSponsors = await Sponsor.insertMany(sponsors.map(image => ({ event_id: eventId, pictures: image.filename })));
-    console.log(newSponsors, newExhibitors, "---------------newSponsors,newExhibitors---------------");
+    // console.log(newSponsors, newExhibitors, "---------------newSponsors,newExhibitors---------------");
+
     res.status(201).json({
       message: "Exhibitors and Sponsors added successfully",
       exhibitors: newExhibitors,
@@ -82,9 +62,7 @@ const addExhibitorsAndSponsors = async (req, res) => {
   }
 };
 
-
-
-
+// 4. Create Event : Adding Package Info : /v1/auth/events/package/create-event/eventId [PATCH]
 const addPackageInfo = catchAsync(async (req, res) => {
   const { eventId } = req.params;
   const packages = req.body;
@@ -102,6 +80,181 @@ const addPackageInfo = catchAsync(async (req, res) => {
     console.log(error, "---------------error---------------");
   }
 });
+
+// 5. Create Event : Adding Documents, Gallary ,Banners :/v1/auth/events/media/create-event/eventId [PATCH]
+// const addMedia = async (req, res, next) => {
+//   try {
+//     const { eventId } = req.params;
+//     const thumbnail = req.files.thumbnail;
+
+//     // Extract gallery, banners, video link and documents from req.files array
+//     const gallery = req.files.gallery?.filter(file => file.fieldname.startsWith('gallery'));
+//     const banners = req.files.banner?.filter(file => file.fieldname.startsWith('banner'));
+//     const document = req.files.documents?.filter(file => file.fieldname.startsWith('documents'));
+//     console.log(document, "---------------document---------------");
+//     const video_link = req.body.video_link //coming in array
+
+//     // Call the service to handle the addition of media
+//     const result = await eventService.addMedia({ eventId, thumbnail, gallery, banners, video_link, document });
+
+//     res.status(201).json(result);
+//   } catch (error) {
+//     console.error("Error in addMedia controller:", error);
+//     next(error);
+//   }
+// };
+const addMedia = async (req, res, next) => {
+  console.log(req.files, "---------------req.files---------------");
+  try {
+    const { eventId } = req.params;
+
+    // Extract files from req.files
+    const thumbnail = req.files.thumbnail?.[0]; // Single file
+    const gallery = req.files.gallery || []; // Array of files
+    const banners = req.files.banner || []; // Array of files
+    const documents = req.files.document || []; // Array of files
+
+    // Extract video links from req.body
+    // const video_links = JSON.parse(req.body.video_link || "[]");
+    const video_links = req.body.video_link;
+    console.log(documents, "---------------documets---------------");
+
+    // Call the service to handle media addition
+    const result = await eventService.addMedia({
+      eventId,
+      thumbnail,
+      gallery,
+      banners,
+      video_links,
+      documents,
+    });
+
+    res.status(201).json(result);
+  } catch (error) {
+    console.error("Error in addMedia controller:", error);
+    next(error);
+  }
+};
+
+
+// 6. Create Event : Adding Speakers : /v1/auth/events/speakerlist/create-event/:eventId [PATCH]
+const addSpeaker = catchAsync(async (req, res) => {
+  console.log("hy")
+  const { eventId } = req.params;
+  const parsedSpeakerData = [];
+  if (req.body.name && req.body.designation) {
+    for (let i = 0; i < req.body.name.length; i++) {
+      parsedSpeakerData.push({
+        name: req.body.name[i],
+        designation: req.body.designation[i],
+      });
+    }
+  }
+  // console.log("parsed", parsedSpeakerData,)
+  const { speakerData } = req.body
+  const { profile_picture } = req.files;
+  // console.log(req.files, "---------------profile_pictures---------------");
+  // console.log(req.body, "---------------speakerData---------------");
+
+
+  try {
+    const { data, statusCode } = await eventService.addSpeaker(eventId, parsedSpeakerData, req.files);
+    // console.log(data, statusCode, "---------------data---------------");
+    res.status(statusCode).json({
+      success: true,
+      data,
+      message: `Speakers ${statusCode === 200 ? 'Added' : 'Already Up to Date'} Successfully!`,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 7. Create Event : Add Domain Info : 
+const addDomainInfo = catchAsync(async (req, res) => {
+  const { eventId } = req.params;
+  const facilities = req.body.facilities;
+  try {
+    const { hotel, statusCode } = await eventService.addDomainInfo(eventId, facilities);
+    res.status(statusCode).json({
+      success: true,
+      hotel: hotel,
+      message: `Facilities Info ${statusCode === 200 ? 'Added' : 'Already Up to Date'} Successfully!`,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 8. Create Event : Add Social Media Links : /v1/auth/events/social/create-event/:eventId [PATCH]
+const addSocial = catchAsync(async (req, res) => {
+  const { eventId } = req.params;
+  const links = req.body;
+  console.log("socials", links)
+  try {
+    const { hotel, statusCode } = await eventService.addSocial(eventId, links);
+    res.status(statusCode).json({
+      success: true,
+      hotel: hotel,
+      message: `Social Medial Links ${statusCode === 200 ? 'Added' : 'Already Up to Date'} Successfully!`,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// 9. Update Event Status : Add Social Media Links : /v1/auth/events/social/create-event/:eventId [PATCH]
+const updateEventStatus = catchAsync(async (req, res) => {
+  const { eventId } = req.params;
+  console.log(eventId, "---------------event Id---------------");
+  const new_status = req.body;
+  console.log("socials", new_status)
+  try {
+    const changeStatus = await eventService.updateEvent(eventId);
+
+    if (!changeStatus) {
+      return res.status(404).json({ success: false, message: "Status not updated." });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Event Status changed successfully.",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Error in during status changeing User.", success: true });
+  }
+
+
+});
+
+
+
+const getEvents = async (req, res) => {
+  console.log(req.body, "---------------req---------------");
+  try {
+    const getHotels = await eventService.getEvents();
+    console.log(getHotels, "---------------getHotels---------------");
+    res.json({ success: true, events: getHotels });
+  } catch (error) {
+    console.log(error, "---------------error---------------");
+    res.status(500).json({ success: false, message: "new Server Error" });
+  }
+}
+
+const getEventsAdmin = async (req, res) => {
+  console.log(req.body, "---------------req---------------");
+  try {
+    const getHotels = await eventService.getEventsAdmin();
+    console.log(getHotels, "---------------getHotels---------------");
+    res.json({ success: true, events: getHotels });
+  } catch (error) {
+    console.log(error, "---------------error---------------");
+    res.status(500).json({ success: false, message: "new Server Error" });
+  }
+}
+
+
+
 const getPackageInfo = catchAsync(async (req, res) => {
   const { id } = req.params;
 
@@ -122,68 +275,6 @@ const getPackageInfo = catchAsync(async (req, res) => {
 });
 
 
-const addMedia = async (req, res, next) => {
-  try {
-    const { eventId } = req.params;
-    const thumbnail = req.files.thumbnail; // Assuming the thumbnail is a single file
-
-    // Extract gallery files from req.files array
-    const gallery = req.files.gallery.filter(file => file.fieldname.startsWith('gallery'));
-    const banners = req.files.banner.filter(file => file.fieldname.startsWith('banner'));
-    const video_link = req.body.video_link //coming in arrey
-    // Call the service to handle the addition of media
-    const result = await eventService.addMedia({ eventId, thumbnail, gallery, banners, video_link });
-
-    // Respond with the result
-    res.status(201).json(result);
-  } catch (error) {
-    console.error("Error in addMedia controller:", error);
-    next(error);
-  }
-};
-
-
-// const addSpeaker = catchAsync(async (req, res) => {
-//   const { eventId } = req.params;
-//   const speakerData = req.body;
-//   const profile_picture = req.files.profile_picture;
-//   try {
-//     const { data, statusCode } = await eventService.addSpeaker(eventId, speakerData, profile_picture);
-//     console.log(data, statusCode, "---------------data---------------");
-//     res.status(statusCode).json({
-//       success: true,
-//       data,
-//       message: `Property Rules Info ${statusCode === 200 ? 'Saved' : 'Already Up to Date'} Successfully!`,
-//     });
-//   } catch (error) {
-//     res.status(500).json({ success: false, error: error.message });
-//   }
-// });
-
-
-
-
-const addSpeaker = catchAsync(async (req, res) => {
-  console.log("hy")
-  const { eventId } = req.params;
-  const {speakerData} = req.body
-  const { profile_picture } = req.files;
-  console.log(req.files, "---------------profile_pictures---------------");
-  console.log(req.body, "---------------speakerData---------------");
- 
-
-  try {
-    const { data, statusCode } = await eventService.addSpeaker(eventId, req.body, req.files);
-    console.log(data, statusCode, "---------------data---------------");
-    res.status(statusCode).json({
-      success: true,
-      data,
-      message: `Speakers ${statusCode === 200 ? 'Added' : 'Already Up to Date'} Successfully!`,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
 
 
 
@@ -192,37 +283,16 @@ const addSpeaker = catchAsync(async (req, res) => {
 
 
 
-const addDomainInfo = catchAsync(async (req, res) => {
-  const { eventId } = req.params;
-  const facilities = req.body.facilities;
-  try {
-    const { hotel, statusCode } = await eventService.addDomainInfo(eventId, facilities);
-    res.status(statusCode).json({
-      success: true,
-      hotel: hotel,
-      message: `Facilities Info ${statusCode === 200 ? 'Added' : 'Already Up to Date'} Successfully!`,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
 
 
-const addSocial = catchAsync(async (req, res) => {
-  const { eventId } = req.params;
-  const links = req.body;
-  console.log("socials", links)
-  try {
-    const { hotel, statusCode } = await eventService.addSocial(eventId, links);
-    res.status(statusCode).json({
-      success: true,
-      hotel: hotel,
-      message: `Social Medial Links ${statusCode === 200 ? 'Added' : 'Already Up to Date'} Successfully!`,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+
+
+
+
+
+
+
+
 
 
 
@@ -407,7 +477,9 @@ module.exports = {
   getCreatedPackagelistbyEventId,
   getPackageInfo,
   addPitchInfo,
-  addExhibitorsAndSponsors
+  addExhibitorsAndSponsors,
+  updateEventStatus,
+  getEventsAdmin
 };
 
 

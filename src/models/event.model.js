@@ -1,3 +1,4 @@
+const { required } = require("joi");
 const mongoose = require("mongoose");
 
 // Event Schema
@@ -45,7 +46,7 @@ const eventSchema = new mongoose.Schema({
     default: null,
   },
 
-  website_link: { type: String, default: null },
+  website_link: { type: String, default: null, required:false },
   facebook: { type: String, default: null },
   linkedin: { type: String, default: null },
   instagram: { type: String, default: null },
@@ -68,7 +69,7 @@ const eventSchema = new mongoose.Schema({
   published_end_date: { type: Date, default: null },
   published_start_time: { type: String, default: null },
   published_end_time: { type: String, default: null },
-  status: { type: String, default: null },
+  status: { type: Boolean, default: false },
   event_mode: { type: String, default: null },
   event_time_category: { type: String, default: null },
   views: { type: Number, default: 0 },

@@ -8,38 +8,18 @@ const public_routes = require("./routes/public");
 const private_routes = require("./routes/private");
 const path = require("path");
 const app = require("./uploads/imageRoute");
-
-
 const main = express();
 const uploade=multer()
+
 // main.use(helmet());
-main.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'"],
-      imgSrc: ["'self'", "data:"],
-    },
-  })
-);
-
-//parse json request body
+main.use(helmet.contentSecurityPolicy({directives: {defaultSrc:["'self'"], imgSrc:["'self'", "data:"],},}));
 main.use(express.json());
-//parse urlencoded request body
 main.use(express.urlencoded({ extended: true }));
-// main.use('/uploads', express.static(path.join(__dirname, 'src/uploads')));
-
-// main.use('/uploads', express.static(path.join(__dirname, 'src/uploads')));
-// main.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-// main.use('/folder1', express.static(path.join(__dirname, 'folder1')));
-// main.use('/folder2', express.static(path.join(__dirname, 'folder2')));
-// main.use('/folder3', express.static(path.join(__dirname, 'folder3')));
 
 main.use('uploads/eventBookings', express.static(path.join(__dirname, 'uploads', 'eventBookings')));
 main.use('uploads/eventDetails', express.static(path.join(__dirname, 'uploads', 'eventDetails')));
 main.use('uploads/qrCode', express.static(path.join(__dirname, 'uploads', 'qrCode')));
 
-
-//enable cors
 main.use(cors());
 main.options("*", cors());
 
