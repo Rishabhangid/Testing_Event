@@ -90,7 +90,7 @@ const uploadMiddleware = multer({
     // const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     // const mimetype = allowedTypes.test(file.mimetype);
 
-    if (extname && mimetype) {
+    if (true) {
       cb(null, true);
     } else {
       cb(new Error("Only images (PNG, JPG) and PDFs are allowed!"));
